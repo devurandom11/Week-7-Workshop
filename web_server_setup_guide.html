@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Server Setup Guide - Enterprise Linux Infrastructure</title>
+    <style>
+      :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --light-color: #ecf0f1;
+        --dark-color: #34495e;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        line-height: 1.6;
+        color: #333;
+        background-color: var(--light-color);
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+
+      header {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 1rem 0;
+      }
+
+      header h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+      }
+
+      nav {
+        background-color: var(--dark-color);
+        padding: 0.5rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      nav ul {
+        list-style: none;
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      nav ul li {
+        margin-right: 1rem;
+      }
+
+      nav ul li a {
+        color: white;
+        text-decoration: none;
+        padding: 0.5rem;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+      }
+
+      nav ul li a:hover {
+        background-color: var(--secondary-color);
+      }
+
+      main {
+        padding: 2rem 0;
+      }
+
+      section {
+        margin-bottom: 3rem;
+        background-color: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h2 {
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--secondary-color);
+      }
+
+      h3 {
+        color: var(--dark-color);
+        margin: 1.5rem 0 1rem;
+      }
+
+      h4 {
+        color: var(--dark-color);
+        margin: 1.2rem 0 0.8rem;
+      }
+
+      p {
+        margin-bottom: 1rem;
+      }
+
+      ul,
+      ol {
+        margin-left: 2rem;
+        margin-bottom: 1.5rem;
+      }
+
+      li {
+        margin-bottom: 0.5rem;
+      }
+
+      .exercise-card {
+        border-left: 4px solid var(--secondary-color);
+        padding-left: 1.5rem;
+        margin: 1.5rem 0;
+        background-color: #f9f9f9;
+        padding: 1rem 1.5rem;
+        border-radius: 0 8px 8px 0;
+      }
+
+      .exercise-card h4 {
+        color: var(--secondary-color);
+        margin-top: 0;
+      }
+
+      footer {
+        background-color: var(--primary-color);
+        color: white;
+        text-align: center;
+        padding: 1.5rem 0;
+        margin-top: 2rem;
+      }
+
+      pre {
+        background-color: #2b2b2b;
+        color: #f8f8f2;
+        padding: 1rem;
+        border-radius: 4px;
+        overflow-x: auto;
+        position: relative;
+        margin: 1rem 0;
+      }
+
+      code {
+        font-family: "Courier New", Courier, monospace;
+        font-size: 0.9rem;
+      }
+
+      .architecture-diagram {
+        margin: 2rem 0;
+        padding: 1rem;
+        background-color: #f0f8ff;
+        border: 1px solid #d0e0f0;
+        border-radius: 8px;
+      }
+
+      .architecture-diagram h4 {
+        color: var(--secondary-color);
+        margin-bottom: 1rem;
+      }
+
+      .architecture-diagram pre {
+        background-color: white;
+        color: #333;
+        border: 1px solid #ddd;
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-bottom: 1rem;
+        padding: 0.5rem 1rem;
+        background-color: var(--secondary-color);
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+
+      .back-link:hover {
+        background-color: var(--dark-color);
+      }
+
+      .comparison-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1.5rem 0;
+      }
+
+      .comparison-table th, .comparison-table td {
+        border: 1px solid #ddd;
+        padding: 8px 12px;
+        text-align: left;
+      }
+
+      .comparison-table th {
+        background-color: var(--light-color);
+        color: var(--dark-color);
+      }
+
+      .comparison-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+
+      @media (max-width: 768px) {
+        header h1 {
+          font-size: 1.8rem;
+        }
+
+        nav ul {
+          flex-direction: column;
+        }
+
+        nav ul li {
+          margin-right: 0;
+          margin-bottom: 0.5rem;
+        }
+      }
+    </style>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Add copy buttons to all code blocks
+        const codeBlocks = document.querySelectorAll("pre code");
+        codeBlocks.forEach(function (codeBlock, index) {
+          // Create wrapper div with position relative
+          const wrapper = document.createElement("div");
+          wrapper.style.position = "relative";
+
+          // Create copy button
+          const copyButton = document.createElement("button");
+          copyButton.innerHTML = "Copy";
+          copyButton.className = "copy-button";
+          copyButton.style.position = "absolute";
+          copyButton.style.top = "5px";
+          copyButton.style.right = "5px";
+          copyButton.style.padding = "3px 8px";
+          copyButton.style.backgroundColor = "var(--secondary-color)";
+          copyButton.style.color = "white";
+          copyButton.style.border = "none";
+          copyButton.style.borderRadius = "4px";
+          copyButton.style.fontSize = "12px";
+          copyButton.style.cursor = "pointer";
+          copyButton.dataset.index = index;
+
+          // Replace the code block with the wrapper
+          const pre = codeBlock.parentNode;
+          const parent = pre.parentNode;
+          wrapper.appendChild(pre);
+          wrapper.appendChild(copyButton);
+          parent.appendChild(wrapper);
+
+          // Add click event to copy button
+          copyButton.addEventListener("click", function () {
+            const textToCopy = codeBlock.textContent;
+
+            // Create a temporary textarea element to copy text
+            const textarea = document.createElement("textarea");
+            textarea.value = textToCopy;
+            textarea.setAttribute("readonly", "");
+            textarea.style.position = "absolute";
+            textarea.style.left = "-9999px";
+            document.body.appendChild(textarea);
+
+            // Select and copy text
+            textarea.select();
+            document.execCommand("copy");
+
+            // Clean up
+            document.body.removeChild(textarea);
+
+            // Show feedback
+            const originalText = copyButton.innerHTML;
+            copyButton.innerHTML = "Copied!";
+            setTimeout(function () {
+              copyButton.innerHTML = originalText;
+            }, 1500);
+          });
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Web Server Setup Guide</h1>
+        <p>
+          A comprehensive step-by-step guide for configuring the Web Server VM
+        </p>
+      </div>
+    </header>
+
+    <nav>
+      <div class="container">
+        <ul>
+          <li><a href="enterprise_linux_tutorial.html">Main Tutorial</a></li>
+          <li><a href="#overview">Overview</a></li>
+          <li><a href="#prerequisites">Prerequisites</a></li>
+          <li><a href="#lamp-lemp">LAMP/LEMP Stack</a></li>
+          <li><a href="#reverse-proxy">Reverse Proxy</a></li>
+          <li><a href="#https">HTTPS Setup</a></li>
+          <li><a href="#waf">ModSecurity WAF</a></li>
+          <li><a href="#troubleshooting">Troubleshooting</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="container">
+      <a href="enterprise_linux_tutorial.html" class="back-link">&larr; Back to Main Tutorial</a>
+
+      <section id="overview">
+        <h2>Overview</h2>
+        <p>
+          This guide walks you through setting up a Web Server VM for your Enterprise Linux Infrastructure. The Web Server VM hosts public-facing services and serves as the entry point for your application users. You'll configure a LAMP/LEMP stack, set up a reverse proxy, implement HTTPS encryption, and add security measures to protect against common web attacks.
+        </p>
+        
+        <div class="architecture-diagram">
+          <h4>Web Server Architecture</h4>
+          <p>We'll be setting up the following components:</p>
+          <pre><code>                                External Users
+                                       │
+                                       ▼
+                                  [ Internet ]
+                                       │
+                                       ▼
+                          Gateway/Router (10.100.0.1)
+                                       │
+                                       ▼
+                         ┌──────────────────────────┐
+                         │                          │
+                         │     Web Server VM        │
+                         │    (10.100.0.10)         │
+                         │                          │
+                         │ ┌────────────────────┐   │
+                         │ │  Nginx (Frontend)  │   │
+                         │ │   [ Port 80/443 ]  │   │
+                         │ └──────────┬─────────┘   │
+                         │            │             │
+                         │            ▼             │
+                         │ ┌────────────────────┐   │
+                         │ │ Apache (Backend)   │   │
+                         │ │     [ PHP-FPM ]    │   │
+                         │ └──────────┬─────────┘   │
+                         │            │             │
+                         └──────────────────────────┘
+                                      │
+                                      ▼
+                               Database Server
+                             (192.168.100.20)</code></pre>
+        </div>
+      </section>
+
+      <section id="prerequisites">
+        <h2>Prerequisites</h2>
+        <ul>
+          <li>CentOS Stream 9 installed on your Web Server VM</li>
+          <li>Network interface configured with static IP 10.100.0.10/24 (DMZ network)</li>
+          <li>Root access or sudo privileges</li>
+          <li>Gateway VM properly configured as described in the Gateway Configuration Guide</li>
+          <li>Inbound port forwarding set up on the Gateway for ports 80 and 443</li>
+        </ul>
+
+        <div class="exercise-card">
+          <h4>Setup Network Interface</h4>
+          <p>
+            Before starting, verify your network interface is properly configured:
+          </p>
+          <pre><code># Check network interfaces
+ip addr show</code></pre>
+          
+          <p>Configure static IP (if not already configured):</p>
+          <pre><code># Create/edit network configuration 
+sudo nano /etc/sysconfig/network-scripts/ifcfg-eth0</code></pre>
+          <p>Add the following:</p>
+          <pre><code>TYPE=Ethernet
+BOOTPROTO=static
+NAME=eth0
+DEVICE=eth0
+ONBOOT=yes
+IPADDR=10.100.0.10
+NETMASK=255.255.255.0
+GATEWAY=10.100.0.1
+DNS1=8.8.8.8
+DNS2=8.8.4.4
+</code></pre>
+
+          <p>Restart the network service to apply changes:</p>
+          <pre><code>sudo systemctl restart NetworkManager</code></pre>
+        </div>
+      </section>
+
+      <section id="lamp-lemp">
+        <h2>1. Installing LAMP or LEMP Stack</h2>
+        
+        <p>You can choose between LAMP (Linux, Apache, MySQL, PHP) or LEMP (Linux, Nginx, MySQL, PHP) stack. For this guide, we'll demonstrate both options, but ultimately configure Nginx as a reverse proxy in front of Apache for the best of both worlds.</p>
+
+        <h3>Comparing LAMP vs LEMP</h3>
+        <table class="comparison-table">
+          <tr>
+            <th>Component</th>
+            <th>LAMP</th>
+            <th>LEMP</th>
+          </tr>
+          <tr>
+            <td>Web Server</td>
+            <td>Apache</td>
+            <td>Nginx</td>
+          </tr>
+          <tr>
+            <td>Strengths</td>
+            <td>Feature-rich, .htaccess support, widespread adoption</td>
+            <td>Performance for static content, low memory usage, event-driven architecture</td>
+          </tr>
+          <tr>
+            <td>PHP Processing</td>
+            <td>mod_php, PHP-FPM</td>
+            <td>PHP-FPM (required)</td>
+          </tr>
+          <tr>
+            <td>Configuration Complexity</td>
+            <td>Medium</td>
+            <td>Medium-High</td>
+          </tr>
+        </table>
+
+        <div class="exercise-card">
+          <h4>Step 1.1: Update System and Install Required Repositories</h4>
+          <pre><code># Update system packages
+sudo dnf update -y
+
+# Install EPEL repository (Extra Packages for Enterprise Linux)
+sudo dnf install -y epel-release
+
+# Install Remi repository for latest PHP packages
+sudo dnf install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm</code></pre>
+        </div>
+
+        <h3>Option A: Installing Apache (LAMP)</h3>
+        <div class="exercise-card">
+          <h4>Step 1.2A: Install Apache Web Server</h4>
+          <pre><code># Install Apache
+sudo dnf install -y httpd
+
+# Start and enable Apache service
+sudo systemctl start httpd
+sudo systemctl enable httpd
+
+# Check status
+sudo systemctl status httpd</code></pre>
+          <p>Configure the firewall to allow HTTP/HTTPS traffic:</p>
+          <pre><code># Allow HTTP and HTTPS traffic
+sudo firewall-cmd --permanent --add-service=http
+sudo firewall-cmd --permanent --add-service=https
+sudo firewall-cmd --reload</code></pre>
+        </div>
+
+        <h3>Option B: Installing Nginx (LEMP)</h3>
+        <div class="exercise-card">
+          <h4>Step 1.2B: Install Nginx Web Server</h4>
+          <pre><code># Install Nginx
+sudo dnf install -y nginx
+
+# Start and enable Nginx service
+sudo systemctl start nginx
+sudo systemctl enable nginx
+
+# Check status
+sudo systemctl status nginx</code></pre>
+          <p>Configure the firewall to allow HTTP/HTTPS traffic:</p>
+          <pre><code># Allow HTTP and HTTPS traffic
+sudo firewall-cmd --permanent --add-service=http
+sudo firewall-cmd --permanent --add-service=https
+sudo firewall-cmd --reload</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 1.3: Install MariaDB (MySQL) Database Server</h4>
+          <pre><code># Install MariaDB
+sudo dnf install -y mariadb-server
+
+# Start and enable MariaDB service
+sudo systemctl start mariadb
+sudo systemctl enable mariadb
+
+# Secure the MariaDB installation
+sudo mysql_secure_installation</code></pre>
+          <p>During the mysql_secure_installation process, you'll be asked to:</p>
+          <ul>
+            <li>Set a root password</li>
+            <li>Remove anonymous users</li>
+            <li>Disallow root login remotely</li>
+            <li>Remove test database</li>
+            <li>Reload privilege tables</li>
+          </ul>
+          <p>It's recommended to answer "Y" to all these questions for a secure setup.</p>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 1.4: Install PHP and Required Extensions</h4>
+          <pre><code># Enable PHP 8.2 Remi repository (or latest version available)
+sudo dnf module reset php
+sudo dnf module enable php:remi-8.2 -y
+
+# Install PHP and common extensions
+sudo dnf install -y php php-fpm php-mysqlnd php-opcache php-gd php-xml php-mbstring php-json
+
+# Start and enable PHP-FPM service
+sudo systemctl start php-fpm
+sudo systemctl enable php-fpm
+
+# Check PHP version
+php -v</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 1.5: Configure PHP-FPM</h4>
+          <pre><code># Edit PHP-FPM configuration
+sudo nano /etc/php-fpm.d/www.conf</code></pre>
+          <p>Find and modify the following lines (use Ctrl+W to search):</p>
+          <pre><code>; For Apache
+user = apache
+group = apache
+
+; For Nginx (uncomment if using Nginx only)
+;user = nginx
+;group = nginx
+
+listen.owner = apache
+listen.group = apache
+listen.mode = 0660
+
+; Change socket path if needed
+listen = /var/run/php-fpm/www.sock</code></pre>
+          <p>Restart PHP-FPM to apply changes:</p>
+          <pre><code>sudo systemctl restart php-fpm</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 1.6: Test the Setup</h4>
+          <p>Create a test PHP file:</p>
+          <pre><code># Create a phpinfo file
+sudo echo '<?php phpinfo(); ?>' > /var/www/html/info.php</code></pre>
+          <p>Access the file by navigating to http://10.100.0.10/info.php in your browser</p>
+          <p>After testing, remove the file for security reasons:</p>
+          <pre><code>sudo rm /var/www/html/info.php</code></pre>
+        </div>
+      </section>
+
+      <section id="reverse-proxy">
+        <h2>2. Configuring Nginx as a Reverse Proxy for Apache</h2>
+        
+        <p>In this setup, we'll use Nginx as the front-facing web server to handle static content and SSL termination, while Apache will process PHP and dynamic content. This combines the strengths of both web servers.</p>
+
+        <div class="exercise-card">
+          <h4>Step 2.1: Configure Apache to Listen on Localhost Only</h4>
+          <p>Edit Apache's main configuration file:</p>
+          <pre><code>sudo nano /etc/httpd/conf/httpd.conf</code></pre>
+          <p>Find the "Listen" directive and change it from:</p>
+          <pre><code>Listen 80</code></pre>
+          <p>To:</p>
+          <pre><code>Listen 127.0.0.1:8080</code></pre>
+          <p>Create a virtual host configuration file for Apache:</p>
+          <pre><code>sudo nano /etc/httpd/conf.d/vhost.conf</code></pre>
+          <p>Add the following configuration:</p>
+          <pre><code><VirtualHost 127.0.0.1:8080>
+    ServerName example.com
+    ServerAlias www.example.com
+    DocumentRoot /var/www/html
+    
+    <Directory /var/www/html>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+    
+    ErrorLog /var/log/httpd/error.log
+    CustomLog /var/log/httpd/access.log combined
+</VirtualHost></code></pre>
+          <p>Restart Apache to apply changes:</p>
+          <pre><code>sudo systemctl restart httpd</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 2.2: Install and Configure Nginx as Reverse Proxy</h4>
+          <p>If you haven't installed Nginx yet:</p>
+          <pre><code>sudo dnf install -y nginx</code></pre>
+          <p>Create a new Nginx configuration file:</p>
+          <pre><code>sudo nano /etc/nginx/conf.d/reverse-proxy.conf</code></pre>
+          <p>Add the following configuration:</p>
+          <pre><code>server {
+    listen 80;
+    server_name example.com www.example.com;
+    
+    access_log /var/log/nginx/example.com.access.log;
+    error_log /var/log/nginx/example.com.error.log;
+    
+    # Serve static files directly
+    location ~* \.(jpg|jpeg|gif|png|css|js|ico|xml)$ {
+        access_log off;
+        log_not_found off;
+        expires 30d;
+        root /var/www/html;
+    }
+    
+    # Pass PHP files to Apache
+    location ~ \.php$ {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    # Pass everything else to Apache
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}</code></pre>
+          <p>Test the Nginx configuration:</p>
+          <pre><code>sudo nginx -t</code></pre>
+          <p>If the test is successful, restart Nginx:</p>
+          <pre><code>sudo systemctl restart nginx</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 2.3: Test the Reverse Proxy Setup</h4>
+          <p>Create a test PHP file:</p>
+          <pre><code>sudo echo '<?php echo "Reverse proxy is working! Server IP: " . $_SERVER["SERVER_ADDR"] . ", Client IP: " . $_SERVER["REMOTE_ADDR"] . ", X-Forwarded-For: " . (isset($_SERVER["HTTP_X_FORWARDED_FOR"]) ? $_SERVER["HTTP_X_FORWARDED_FOR"] : "Not set"); ?>' > /var/www/html/proxy-test.php</code></pre>
+          <p>Access the test file by navigating to http://10.100.0.10/proxy-test.php in your browser. You should see the proxy information displayed.</p>
+        </div>
+      </section>
+
+      <section id="https">
+        <h2>3. Implementing HTTPS with Let's Encrypt</h2>
+        
+        <p>Let's Encrypt provides free SSL certificates. We'll use certbot to automate the certificate issuance and renewal process.</p>
+
+        <div class="exercise-card">
+          <h4>Step 3.1: Install Certbot and Nginx Plugin</h4>
+          <pre><code># Install Certbot and Nginx plugin
+sudo dnf install -y certbot python3-certbot-nginx</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 3.2: Obtain SSL Certificate</h4>
+          <p>For a production environment with a real domain name:</p>
+          <pre><code># Replace example.com with your actual domain
+sudo certbot --nginx -d example.com -d www.example.com</code></pre>
+          <p>For a local/test environment without a real domain, we can create a self-signed certificate:</p>
+          <pre><code># Create directory for certificates
+sudo mkdir -p /etc/nginx/ssl
+
+# Generate self-signed certificate
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+    -keyout /etc/nginx/ssl/nginx.key \
+    -out /etc/nginx/ssl/nginx.crt \
+    -subj "/C=US/ST=State/L=City/O=Organization/CN=example.com"</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 3.3: Configure Nginx for HTTPS with Self-Signed Certificate</h4>
+          <p>Edit the Nginx configuration file:</p>
+          <pre><code>sudo nano /etc/nginx/conf.d/reverse-proxy.conf</code></pre>
+          <p>Modify the configuration to support HTTPS:</p>
+          <pre><code># HTTP server - redirects to HTTPS
+server {
+    listen 80;
+    server_name example.com www.example.com;
+    
+    # Redirect all HTTP requests to HTTPS
+    return 301 https://$host$request_uri;
+}
+
+# HTTPS server
+server {
+    listen 443 ssl;
+    server_name example.com www.example.com;
+    
+    access_log /var/log/nginx/example.com.access.log;
+    error_log /var/log/nginx/example.com.error.log;
+    
+    # SSL configuration
+    ssl_certificate /etc/nginx/ssl/nginx.crt;
+    ssl_certificate_key /etc/nginx/ssl/nginx.key;
+    
+    # SSL settings
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
+    ssl_session_timeout 10m;
+    ssl_session_cache shared:SSL:10m;
+    
+    # HSTS (optional but recommended)
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    
+    # Serve static files directly
+    location ~* \.(jpg|jpeg|gif|png|css|js|ico|xml)$ {
+        access_log off;
+        log_not_found off;
+        expires 30d;
+        root /var/www/html;
+    }
+    
+    # Pass PHP files to Apache
+    location ~ \.php$ {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    # Pass everything else to Apache
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}</code></pre>
+          <p>Test Nginx configuration:</p>
+          <pre><code>sudo nginx -t</code></pre>
+          <p>If successful, restart Nginx:</p>
+          <pre><code>sudo systemctl restart nginx</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 3.4: Configure Automatic Certificate Renewal for Let's Encrypt</h4>
+          <p>Note: This step applies only if you used Let's Encrypt (not self-signed certificates)</p>
+          <p>Test the renewal process:</p>
+          <pre><code>sudo certbot renew --dry-run</code></pre>
+          <p>Create a cron job to automatically renew certificates:</p>
+          <pre><code>sudo crontab -e</code></pre>
+          <p>Add the following line to run twice daily (as recommended by Let's Encrypt):</p>
+          <pre><code>0 0,12 * * * /usr/bin/certbot renew --quiet</code></pre>
+        </div>
+      </section>
+
+      <section id="waf">
+        <h2>4. Setting Up ModSecurity WAF</h2>
+        
+        <p>ModSecurity is a Web Application Firewall (WAF) that provides protection against various attacks, including SQL Injection, Cross-Site Scripting (XSS), and more.</p>
+
+        <div class="exercise-card">
+          <h4>Step 4.1: Install ModSecurity for Apache</h4>
+          <pre><code># Install ModSecurity and its dependencies
+sudo dnf install -y mod_security mod_security_crs</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 4.2: Configure ModSecurity</h4>
+          <p>Create a configuration file for ModSecurity:</p>
+          <pre><code>sudo cp /etc/httpd/conf.d/mod_security.conf /etc/httpd/conf.d/mod_security.conf.bak
+sudo nano /etc/httpd/conf.d/mod_security.conf</code></pre>
+          <p>Edit the configuration to enable ModSecurity:</p>
+          <pre><code># Basic ModSecurity configuration
+<IfModule mod_security2.c>
+    # Enable ModSecurity
+    SecRuleEngine On
+    
+    # Request body access
+    SecRequestBodyAccess On
+    
+    # Reject requests with status 403 if there's a violation
+    SecDefaultAction "phase:2,deny,status:403,log,auditlog"
+    
+    # Define the default debug log level
+    SecDebugLogLevel 0
+    
+    # Path to the audit log
+    SecAuditLog /var/log/httpd/modsec_audit.log
+    
+    # Path to the debug log
+    SecDebugLog /var/log/httpd/modsec_debug.log
+    
+    # Only log relevant transactions
+    SecAuditEngine RelevantOnly
+    
+    # Include OWASP Core Rule Set
+    Include modsecurity.d/activated_rules/*.conf
+    Include /usr/share/mod_modsecurity_crs/rules/*.conf
+    
+    # Some basic rules
+    SecRule REQUEST_HEADERS:Content-Type "text/xml" \
+        "id:'200000',phase:1,deny,status:403,log,msg:'XML content type not allowed'"
+        
+    # Prevent SQL Injection attacks
+    SecRule ARGS "@rx (?i:(\%27)|(\')|(\-\-)|(\%23)|(#))" \
+        "id:'200001',phase:2,deny,status:403,log,msg:'SQL Injection Attack'"
+</IfModule></code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 4.3: Set Up OWASP Core Rule Set</h4>
+          <p>Create a directory for the activated rules:</p>
+          <pre><code>sudo mkdir -p /etc/httpd/modsecurity.d/activated_rules/</code></pre>
+          <p>Enable the core ruleset:</p>
+          <pre><code>sudo cp /usr/share/mod_modsecurity_crs/rules/*.conf /etc/httpd/modsecurity.d/activated_rules/</code></pre>
+          <p>Create a CRS configuration file:</p>
+          <pre><code>sudo nano /etc/httpd/modsecurity.d/activated_rules/crs-setup.conf</code></pre>
+          <p>Add the basic CRS configuration:</p>
+          <pre><code># OWASP CRS Configuration
+SecRuleEngine On
+SecRequestBodyAccess On
+SecDefaultAction "phase:1,log,auditlog,pass"
+
+# Paranoia Level (1-4, higher = more strict)
+SecAction \
+  "id:900000,\
+   phase:1,\
+   nolog,\
+   pass,\
+   t:none,\
+   setvar:tx.paranoia_level=1"</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 4.4: Test ModSecurity</h4>
+          <p>Restart Apache to apply ModSecurity configuration:</p>
+          <pre><code>sudo systemctl restart httpd</code></pre>
+          <p>Create a test script to verify ModSecurity is working:</p>
+          <pre><code>sudo nano /var/www/html/waf-test.php</code></pre>
+          <p>Add the following code:</p>
+          <pre><code><?php
+echo "Testing ModSecurity...<br>";
+echo "Your IP: " . $_SERVER['REMOTE_ADDR'] . "<br>";
+
+// Get a parameter from the URL
+$test = isset($_GET['test']) ? $_GET['test'] : "";
+echo "Test parameter value: " . htmlspecialchars($test) . "<br>";
+?></code></pre>
+          <p>Access the test page with a harmless parameter:</p>
+          <pre><code>http://10.100.0.10/waf-test.php?test=hello</code></pre>
+          <p>Now try with a malicious SQL injection attempt:</p>
+          <pre><code>http://10.100.0.10/waf-test.php?test=1%27%20OR%20%271%27=%271</code></pre>
+          <p>If ModSecurity is working correctly, the second request should be blocked with a 403 Forbidden error.</p>
+          <p>Check the ModSecurity audit log:</p>
+          <pre><code>sudo tail -f /var/log/httpd/modsec_audit.log</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 4.5: Fine-Tune ModSecurity Rules (Optional)</h4>
+          <p>Create a custom rules file for your specific application needs:</p>
+          <pre><code>sudo nano /etc/httpd/modsecurity.d/activated_rules/custom-rules.conf</code></pre>
+          <p>Example custom rules:</p>
+          <pre><code># Custom ModSecurity rules
+# Whitelist your application's IP
+SecRule REMOTE_ADDR "^192\.168\.100\." "id:1000,phase:1,allow,nolog"
+
+# Block specific user agents
+SecRule REQUEST_HEADERS:User-Agent "badbot" "id:1001,phase:1,deny,status:403,log,msg:'Bad bot blocked'"
+
+# Rate limiting for login attempts
+SecAction "id:1002,phase:1,initcol:ip=%{REMOTE_ADDR},pass,nolog"
+SecRule REQUEST_URI "/login" "chain,id:1003,phase:2,pass,nolog"
+  SecRule REQUEST_METHOD "POST" "chain"
+    SecRule IP:LOGINCOUNT "@lt 5" "setvar:ip.LOGINCOUNT=+1"
+SecRule IP:LOGINCOUNT "@ge 5" "id:1004,phase:2,deny,status:429,log,msg:'Too many login attempts'"</code></pre>
+          <p>Restart Apache to apply custom rules:</p>
+          <pre><code>sudo systemctl restart httpd</code></pre>
+        </div>
+      </section>
+
+      <section id="troubleshooting">
+        <h2>Troubleshooting Tips</h2>
+        <div class="exercise-card">
+          <h4>Apache Troubleshooting</h4>
+          <pre><code># Check Apache status
+sudo systemctl status httpd
+
+# View Apache error logs
+sudo tail -f /var/log/httpd/error.log
+
+# Test Apache configuration
+sudo apachectl configtest</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Nginx Troubleshooting</h4>
+          <pre><code># Check Nginx status
+sudo systemctl status nginx
+
+# View Nginx error logs
+sudo tail -f /var/log/nginx/error.log
+
+# Test Nginx configuration
+sudo nginx -t</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>PHP Troubleshooting</h4>
+          <pre><code># Check PHP-FPM status
+sudo systemctl status php-fpm
+
+# View PHP-FPM error logs
+sudo tail -f /var/log/php-fpm/error.log
+
+# Check PHP configuration
+php -i | grep 'Loaded Configuration File'</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>SSL/TLS Troubleshooting</h4>
+          <pre><code># Test SSL configuration
+openssl s_client -connect localhost:443 -servername example.com
+
+# Verify certificate expiration
+echo | openssl s_client -connect localhost:443 2>/dev/null | openssl x509 -noout -dates
+
+# Debug Let's Encrypt
+sudo certbot certificates</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>ModSecurity Troubleshooting</h4>
+          <pre><code># Check if ModSecurity is loaded
+httpd -M | grep security
+
+# View ModSecurity audit log
+sudo tail -f /var/log/httpd/modsec_audit.log
+
+# Temporarily disable ModSecurity for testing
+# Edit /etc/httpd/conf.d/mod_security.conf and change:
+# SecRuleEngine On → SecRuleEngine DetectionOnly</code></pre>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <p>&copy; 2024 Enterprise Linux Infrastructure Simulation Tutorial</p>
+        <p>Part of the Coastline Community College Cyber Xploit Club Competition Workshop Training Series (Week 7)</p>
+        <p>Designed and developed by Mike Crawford for training students to compete in WRCCDC and National CPTC</p>
+      </div>
+    </footer>
+  </body>
+</html>

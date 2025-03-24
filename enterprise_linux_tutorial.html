@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Enterprise Linux Infrastructure Simulation Tutorial</title>
+    <style>
+      :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --light-color: #ecf0f1;
+        --dark-color: #34495e;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        line-height: 1.6;
+        color: #333;
+        background-color: var(--light-color);
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+
+      header {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 1rem 0;
+      }
+
+      header h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+      }
+
+      nav {
+        background-color: var(--dark-color);
+        padding: 0.5rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      nav ul {
+        list-style: none;
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      nav ul li {
+        margin-right: 1rem;
+      }
+
+      nav ul li a {
+        color: white;
+        text-decoration: none;
+        padding: 0.5rem;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+      }
+
+      nav ul li a:hover {
+        background-color: var(--secondary-color);
+      }
+
+      main {
+        padding: 2rem 0;
+      }
+
+      section {
+        margin-bottom: 3rem;
+        background-color: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h2 {
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--secondary-color);
+      }
+
+      h3 {
+        color: var(--dark-color);
+        margin: 1.5rem 0 1rem;
+      }
+
+      h4 {
+        color: var(--dark-color);
+        margin: 1.2rem 0 0.8rem;
+      }
+
+      p {
+        margin-bottom: 1rem;
+      }
+
+      ul,
+      ol {
+        margin-left: 2rem;
+        margin-bottom: 1.5rem;
+      }
+
+      li {
+        margin-bottom: 0.5rem;
+      }
+
+      .architecture-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+      }
+
+      .vm-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1.5rem;
+        background-color: #f9f9f9;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      }
+
+      .vm-card h4 {
+        color: var(--secondary-color);
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .vm-card p {
+        margin-bottom: 0.8rem;
+        font-weight: bold;
+      }
+
+      .vm-card ul {
+        margin-bottom: 0;
+      }
+
+      .exercise-card {
+        border-left: 4px solid var(--secondary-color);
+        padding-left: 1.5rem;
+        margin: 1.5rem 0;
+        background-color: #f9f9f9;
+        padding: 1rem 1.5rem;
+        border-radius: 0 8px 8px 0;
+      }
+
+      .exercise-card h4 {
+        color: var(--secondary-color);
+        margin-top: 0;
+      }
+
+      footer {
+        background-color: var(--primary-color);
+        color: white;
+        text-align: center;
+        padding: 1.5rem 0;
+        margin-top: 2rem;
+      }
+
+      @media (max-width: 768px) {
+        header h1 {
+          font-size: 1.8rem;
+        }
+
+        nav ul {
+          flex-direction: column;
+        }
+
+        nav ul li {
+          margin-right: 0;
+          margin-bottom: 0.5rem;
+        }
+
+        .architecture-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Add copy buttons to all code blocks
+        const codeBlocks = document.querySelectorAll("pre code");
+        codeBlocks.forEach(function (codeBlock, index) {
+          // Create wrapper div with position relative
+          const wrapper = document.createElement("div");
+          wrapper.style.position = "relative";
+
+          // Create copy button
+          const copyButton = document.createElement("button");
+          copyButton.innerHTML = "Copy";
+          copyButton.className = "copy-button";
+          copyButton.style.position = "absolute";
+          copyButton.style.top = "5px";
+          copyButton.style.right = "5px";
+          copyButton.style.padding = "3px 8px";
+          copyButton.style.backgroundColor = "var(--secondary-color)";
+          copyButton.style.color = "white";
+          copyButton.style.border = "none";
+          copyButton.style.borderRadius = "4px";
+          copyButton.style.fontSize = "12px";
+          copyButton.style.cursor = "pointer";
+          copyButton.dataset.index = index;
+
+          // Replace the code block with the wrapper
+          const pre = codeBlock.parentNode;
+          const parent = pre.parentNode;
+          wrapper.appendChild(pre);
+          wrapper.appendChild(copyButton);
+          parent.appendChild(wrapper);
+
+          // Add click event to copy button
+          copyButton.addEventListener("click", function () {
+            const textToCopy = codeBlock.textContent;
+
+            // Create a temporary textarea element to copy text
+            const textarea = document.createElement("textarea");
+            textarea.value = textToCopy;
+            textarea.setAttribute("readonly", "");
+            textarea.style.position = "absolute";
+            textarea.style.left = "-9999px";
+            document.body.appendChild(textarea);
+
+            // Select and copy text
+            textarea.select();
+            document.execCommand("copy");
+
+            // Clean up
+            document.body.removeChild(textarea);
+
+            // Show feedback
+            const originalText = copyButton.innerHTML;
+            copyButton.innerHTML = "Copied!";
+            setTimeout(function () {
+              copyButton.innerHTML = originalText;
+            }, 1500);
+          });
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Enterprise Linux Infrastructure Simulation</h1>
+        <p>
+          A comprehensive tutorial for building enterprise-grade Linux
+          infrastructure
+        </p>
+      </div>
+    </header>
+
+    <nav>
+      <div class="container">
+        <ul>
+          <li><a href="#overview">Overview</a></li>
+          <li><a href="#objectives">Learning Objectives</a></li>
+          <li><a href="#architecture">Lab Architecture</a></li>
+          <li><a href="#specs">Technical Specs</a></li>
+          <li><a href="#exercises">Lab Exercises</a></li>
+          <li><a href="#tools">Required Tools</a></li>
+          <li><a href="#capstone">Capstone Project</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="container">
+      <section id="overview">
+        <h2>Overview</h2>
+        <p>
+          This tutorial guides you through setting up a complete enterprise
+          Linux infrastructure using 6 virtual machines. You'll learn how to
+          configure networks, implement various services, set up security
+          measures, and establish monitoring systems in a practical, hands-on
+          environment.
+        </p>
+        <p>
+          By completing this tutorial, you'll gain valuable experience in
+          enterprise systems administration and architecture, preparing you for
+          real-world infrastructure management challenges.
+        </p>
+      </section>
+
+      <section id="objectives">
+        <h2>Learning Objectives</h2>
+        <ul>
+          <li>
+            <strong>Configure complex network architectures</strong> - Create
+            and manage multiple network segments including DMZ and internal
+            networks
+          </li>
+          <li>
+            <strong>Implement enterprise services</strong> - Set up web servers,
+            databases, containerization, and more
+          </li>
+          <li>
+            <strong>Set up security and access controls</strong> - Configure
+            firewalls, SELinux, authentication, and authorization
+          </li>
+          <li>
+            <strong>Configure automated deployments</strong> - Use Ansible and
+            other tools for infrastructure automation
+          </li>
+          <li>
+            <strong>Establish monitoring/logging systems</strong> - Implement
+            comprehensive monitoring with Prometheus, Grafana, and ELK stack
+          </li>
+          <li>
+            <strong>Practice disaster recovery</strong> - Learn and practice
+            backup, restoration, and failover procedures
+          </li>
+        </ul>
+      </section>
+
+      <section id="architecture">
+        <h2>Lab Architecture</h2>
+        <p>
+          This lab consists of 6 virtual machines, each with a specific role in
+          our enterprise infrastructure:
+        </p>
+
+        <div class="architecture-grid">
+          <div class="vm-card">
+            <h4>Gateway/Router VM</h4>
+            <p>Role:</p>
+            <ul>
+              <li>Firewall (iptables/nftables)</li>
+              <li>DHCP server</li>
+              <li>NAT configuration</li>
+              <li>VPN endpoint</li>
+            </ul>
+            <p>Services:</p>
+            <ul>
+              <li>OpenVPN</li>
+              <li>SSH bastion host</li>
+            </ul>
+          </div>
+
+          <div class="vm-card">
+            <h4>Web Server VM</h4>
+            <p>Role:</p>
+            <ul>
+              <li>Public-facing services</li>
+              <li>Web hosting</li>
+            </ul>
+            <p>Services:</p>
+            <ul>
+              <li>Apache/Nginx</li>
+              <li>PHP-FPM</li>
+              <li>Let's Encrypt SSL</li>
+            </ul>
+          </div>
+
+          <div class="vm-card">
+            <h4>Database VM</h4>
+            <p>Role:</p>
+            <ul>
+              <li>Centralized data storage</li>
+              <li>Database replication</li>
+            </ul>
+            <p>Services:</p>
+            <ul>
+              <li>MySQL/MariaDB (Master)</li>
+              <li>PostgreSQL</li>
+            </ul>
+          </div>
+
+          <div class="vm-card">
+            <h4>Application Server VM</h4>
+            <p>Role:</p>
+            <ul>
+              <li>Containerized services</li>
+              <li>Application deployment</li>
+            </ul>
+            <p>Services:</p>
+            <ul>
+              <li>Docker</li>
+              <li>Kubernetes (minikube)</li>
+              <li>WordPress container</li>
+            </ul>
+          </div>
+
+          <div class="vm-card">
+            <h4>Monitoring VM</h4>
+            <p>Role:</p>
+            <ul>
+              <li>Infrastructure monitoring</li>
+              <li>Log aggregation and analysis</li>
+            </ul>
+            <p>Services:</p>
+            <ul>
+              <li>Prometheus + Grafana</li>
+              <li>ELK Stack (Elasticsearch, Logstash, Kibana)</li>
+            </ul>
+          </div>
+
+          <div class="vm-card">
+            <h4>Client VM</h4>
+            <p>Role:</p>
+            <ul>
+              <li>Internal workstation</li>
+              <li>Testing and monitoring</li>
+            </ul>
+            <p>Services:</p>
+            <ul>
+              <li>SSH client</li>
+              <li>curl</li>
+              <li>Monitoring agent</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="specs">
+        <h2>Technical Specifications</h2>
+
+        <h3>Virtualization Platform</h3>
+        <p>
+          This lab uses VirtualBox/VMware with Vagrant for automation. Vagrant
+          allows us to easily define, create, and manage our virtual machines
+          using code.
+        </p>
+
+        <h3>Network Configuration</h3>
+        <ul>
+          <li>
+            <strong>WAN Network:</strong> DHCP - Connects to the internet
+            through your host machine
+          </li>
+          <li>
+            <strong>Private network:</strong> 192.168.100.0/24 - Internal
+            network for secure communication
+          </li>
+          <li>
+            <strong>DMZ network:</strong> 10.0.100.0/24 - Middle zone for
+            public-facing services
+          </li>
+          <li><strong>VLAN segmentation</strong> for service isolation</li>
+        </ul>
+
+        <h3>Operating System</h3>
+        <p>
+          All VMs will run <strong>CentOS Stream 9</strong>, which provides a
+          stable, enterprise-grade Linux distribution that's commonly used in
+          production environments.
+        </p>
+      </section>
+
+      <section id="exercises">
+        <h2>Lab Exercises</h2>
+
+        <div class="exercise-card">
+          <h4>Gateway Configuration</h4>
+          <ul>
+            <li>
+              Configure iptables/nftables firewall rules to protect internal
+              networks
+            </li>
+            <li>
+              Set up OpenVPN server with certificate authentication for secure
+              remote access
+            </li>
+            <li>
+              Implement port forwarding for web services to make them accessible
+              from the internet
+            </li>
+          </ul>
+          <p style="margin-top: 10px">
+            <a
+              href="gateway_configuration_guide.html"
+              class="btn"
+              style="
+                display: inline-block;
+                padding: 8px 16px;
+                background-color: var(--secondary-color);
+                color: white;
+                text-decoration: none;
+                border-radius: 4px;
+                font-weight: bold;
+              "
+              >View Step-by-Step Guide</a
+            >
+          </p>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Web Server Setup</h4>
+          <ul>
+            <li>Install LEMP/LAMP stack for hosting web applications</li>
+            <li>
+              Configure reverse proxy (Nginx → Apache) for better performance
+              and security
+            </li>
+            <li>
+              Implement HTTPS with Let's Encrypt certbot for encrypted
+              communication
+            </li>
+            <li>
+              Set up ModSecurity WAF rules to protect against common web attacks
+            </li>
+          </ul>
+          <p style="margin-top: 10px">
+            <a
+              href="web_server_setup_guide.html"
+              class="btn"
+              style="
+                display: inline-block;
+                padding: 8px 16px;
+                background-color: var(--secondary-color);
+                color: white;
+                text-decoration: none;
+                border-radius: 4px;
+                font-weight: bold;
+              "
+              >View Step-by-Step Guide</a
+            >
+          </p>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Database Configuration</h4>
+          <ul>
+            <li>
+              Create master-slave replication for high availability and disaster
+              recovery
+            </li>
+            <li>
+              Configure database users with restricted privileges following
+              least privilege principle
+            </li>
+            <li>Implement automated backups with cron for data protection</li>
+          </ul>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Monitoring Implementation</h4>
+          <ul>
+            <li>Deploy Prometheus exporters on all nodes to collect metrics</li>
+            <li>Create Grafana dashboards for system metrics visualization</li>
+            <li>
+              Configure log aggregation with Filebeat → ELK for centralized
+              logging
+            </li>
+          </ul>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Security Hardening</h4>
+          <ul>
+            <li>Implement SELinux policies for enhanced system security</li>
+            <li>
+              Configure fail2ban for SSH protection against brute force attacks
+            </li>
+            <li>Set up auditd rules for monitoring privileged access</li>
+          </ul>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Automation Challenge</h4>
+          <ul>
+            <li>
+              Create Ansible playbooks to:
+              <ul>
+                <li>Automate user creation across all systems</li>
+                <li>Deploy Docker containers consistently</li>
+                <li>Apply security patches systematically</li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Disaster Recovery</h4>
+          <ul>
+            <li>Practice database restoration from backups</li>
+            <li>Rebuild a VM from configuration management</li>
+            <li>Failover web traffic to backup server</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="tools">
+        <h2>Required Tools</h2>
+        <ul>
+          <li>
+            <strong>Vagrant + VirtualBox/VMware</strong> - For creating and
+            managing virtual machines
+          </li>
+          <li>
+            <strong>Ansible</strong> - For configuration management and
+            automation
+          </li>
+          <li>
+            <strong>Wireshark</strong> - For network traffic analysis and
+            troubleshooting
+          </li>
+          <li>
+            <strong>Lynis</strong> - For security auditing and compliance
+            checking
+          </li>
+          <li>
+            <strong>Stress-ng</strong> - For load testing and system performance
+            analysis
+          </li>
+        </ul>
+      </section>
+
+      <section id="capstone">
+        <h2>Capstone Project</h2>
+        <p>
+          As a final challenge, you'll deploy a secure e-commerce platform that
+          incorporates all the skills learned throughout the lab exercises.
+        </p>
+
+        <h3>Project Requirements:</h3>
+        <ul>
+          <li>
+            <strong>HTTPS frontend</strong> - Securely serve web content using
+            SSL/TLS
+          </li>
+          <li>
+            <strong>Database replication</strong> - Ensure data redundancy and
+            high availability
+          </li>
+          <li>
+            <strong>Monitoring alerts</strong> - Configure proactive
+            notifications for system issues
+          </li>
+          <li>
+            <strong>Automated backups</strong> - Implement regular, scheduled
+            backups of critical data
+          </li>
+          <li>
+            <strong>Firewall rules</strong> - Secure the infrastructure with
+            properly configured firewall policies
+          </li>
+        </ul>
+
+        <p>
+          The capstone project will test your ability to integrate all
+          components into a cohesive, secure, and well-monitored infrastructure.
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <p>&copy; 2024 Enterprise Linux Infrastructure Simulation Tutorial</p>
+        <p>
+          Part of the Coastline Community College Cyber Xploit Club Competition
+          Workshop Training Series (Week 7)
+        </p>
+        <p>
+          Designed and developed by Mike Crawford for training students to
+          compete in WRCCDC and National CPTC
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gateway Configuration Guide - Enterprise Linux Infrastructure</title>
+    <style>
+      :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --light-color: #ecf0f1;
+        --dark-color: #34495e;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        line-height: 1.6;
+        color: #333;
+        background-color: var(--light-color);
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+
+      header {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 1rem 0;
+      }
+
+      header h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+      }
+
+      nav {
+        background-color: var(--dark-color);
+        padding: 0.5rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      nav ul {
+        list-style: none;
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      nav ul li {
+        margin-right: 1rem;
+      }
+
+      nav ul li a {
+        color: white;
+        text-decoration: none;
+        padding: 0.5rem;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+      }
+
+      nav ul li a:hover {
+        background-color: var(--secondary-color);
+      }
+
+      main {
+        padding: 2rem 0;
+      }
+
+      section {
+        margin-bottom: 3rem;
+        background-color: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h2 {
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--secondary-color);
+      }
+
+      h3 {
+        color: var(--dark-color);
+        margin: 1.5rem 0 1rem;
+      }
+
+      h4 {
+        color: var(--dark-color);
+        margin: 1.2rem 0 0.8rem;
+      }
+
+      p {
+        margin-bottom: 1rem;
+      }
+
+      ul,
+      ol {
+        margin-left: 2rem;
+        margin-bottom: 1.5rem;
+      }
+
+      li {
+        margin-bottom: 0.5rem;
+      }
+
+      .exercise-card {
+        border-left: 4px solid var(--secondary-color);
+        padding-left: 1.5rem;
+        margin: 1.5rem 0;
+        background-color: #f9f9f9;
+        padding: 1rem 1.5rem;
+        border-radius: 0 8px 8px 0;
+      }
+
+      .exercise-card h4 {
+        color: var(--secondary-color);
+        margin-top: 0;
+      }
+
+      footer {
+        background-color: var(--primary-color);
+        color: white;
+        text-align: center;
+        padding: 1.5rem 0;
+        margin-top: 2rem;
+      }
+
+      pre {
+        background-color: #2b2b2b;
+        color: #f8f8f2;
+        padding: 1rem;
+        border-radius: 4px;
+        overflow-x: auto;
+        position: relative;
+        margin: 1rem 0;
+      }
+
+      code {
+        font-family: "Courier New", Courier, monospace;
+        font-size: 0.9rem;
+      }
+
+      .network-diagram {
+        margin: 2rem 0;
+        padding: 1rem;
+        background-color: #f0f8ff;
+        border: 1px solid #d0e0f0;
+        border-radius: 8px;
+      }
+
+      .network-diagram h4 {
+        color: var(--secondary-color);
+        margin-bottom: 1rem;
+      }
+
+      .network-diagram pre {
+        background-color: white;
+        color: #333;
+        border: 1px solid #ddd;
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-bottom: 1rem;
+        padding: 0.5rem 1rem;
+        background-color: var(--secondary-color);
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+
+      .back-link:hover {
+        background-color: var(--dark-color);
+      }
+
+      @media (max-width: 768px) {
+        header h1 {
+          font-size: 1.8rem;
+        }
+
+        nav ul {
+          flex-direction: column;
+        }
+
+        nav ul li {
+          margin-right: 0;
+          margin-bottom: 0.5rem;
+        }
+      }
+    </style>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Add copy buttons to all code blocks
+        const codeBlocks = document.querySelectorAll("pre code");
+        codeBlocks.forEach(function (codeBlock, index) {
+          // Create wrapper div with position relative
+          const wrapper = document.createElement("div");
+          wrapper.style.position = "relative";
+
+          // Create copy button
+          const copyButton = document.createElement("button");
+          copyButton.innerHTML = "Copy";
+          copyButton.className = "copy-button";
+          copyButton.style.position = "absolute";
+          copyButton.style.top = "5px";
+          copyButton.style.right = "5px";
+          copyButton.style.padding = "3px 8px";
+          copyButton.style.backgroundColor = "var(--secondary-color)";
+          copyButton.style.color = "white";
+          copyButton.style.border = "none";
+          copyButton.style.borderRadius = "4px";
+          copyButton.style.fontSize = "12px";
+          copyButton.style.cursor = "pointer";
+          copyButton.dataset.index = index;
+
+          // Replace the code block with the wrapper
+          const pre = codeBlock.parentNode;
+          const parent = pre.parentNode;
+          wrapper.appendChild(pre);
+          wrapper.appendChild(copyButton);
+          parent.appendChild(wrapper);
+
+          // Add click event to copy button
+          copyButton.addEventListener("click", function () {
+            const textToCopy = codeBlock.textContent;
+
+            // Create a temporary textarea element to copy text
+            const textarea = document.createElement("textarea");
+            textarea.value = textToCopy;
+            textarea.setAttribute("readonly", "");
+            textarea.style.position = "absolute";
+            textarea.style.left = "-9999px";
+            document.body.appendChild(textarea);
+
+            // Select and copy text
+            textarea.select();
+            document.execCommand("copy");
+
+            // Clean up
+            document.body.removeChild(textarea);
+
+            // Show feedback
+            const originalText = copyButton.innerHTML;
+            copyButton.innerHTML = "Copied!";
+            setTimeout(function () {
+              copyButton.innerHTML = originalText;
+            }, 1500);
+          });
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Gateway Configuration Guide</h1>
+        <p>
+          A comprehensive step-by-step guide for configuring the Gateway/Router
+          VM
+        </p>
+      </div>
+    </header>
+
+    <nav>
+      <div class="container">
+        <ul>
+          <li><a href="enterprise_linux_tutorial.html">Main Tutorial</a></li>
+          <li><a href="#overview">Overview</a></li>
+          <li><a href="#prerequisites">Prerequisites</a></li>
+          <li><a href="#firewall">Firewall Configuration</a></li>
+          <li><a href="#openvpn">OpenVPN Setup</a></li>
+          <li><a href="#port-forwarding">Port Forwarding</a></li>
+          <li><a href="#security">Additional Security</a></li>
+          <li><a href="#troubleshooting">Troubleshooting</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="container">
+      <a href="enterprise_linux_tutorial.html" class="back-link"
+        >&larr; Back to Main Tutorial</a
+      >
+
+      <section id="overview">
+        <h2>Overview</h2>
+        <p>
+          This guide walks you through implementing the Gateway/Router VM
+          configuration for your Enterprise Linux Infrastructure. The Gateway VM
+          is a critical component that provides network segmentation, security,
+          and connectivity between networks. You'll configure firewall rules,
+          set up secure remote access with OpenVPN, and implement port
+          forwarding to make web services accessible.
+        </p>
+
+        <div class="network-diagram">
+          <h4>Network Architecture</h4>
+          <p>The Gateway VM will have 3 network interfaces:</p>
+          <ul>
+            <li>
+              <strong>WAN (eth0):</strong> Connected to external
+              network/internet with DHCP
+            </li>
+            <li>
+              <strong>LAN (eth1):</strong> Connected to internal network with
+              static IP 192.168.100.1/24
+            </li>
+            <li>
+              <strong>DMZ (eth2):</strong> Connected to DMZ network with static
+              IP 10.100.0.1/24
+            </li>
+          </ul>
+          <pre><code>                             ┌──────────────┐
+                  Internet────┤     WAN      │
+                             │    (eth0)     │
+                             │     DHCP      │
+                             │               │
+                             │   Gateway VM  │
+                             │               │
+                             │    (eth1)     │
+                             │192.168.100.1/24
+                             │               │
+                             │    (eth2)     │
+                             │ 10.100.0.1/24 │
+                             └──────┬────────┘
+                                    │
+                       ┌────────────┴─────────────┐
+                       │                          │
+               ┌───────▼──────┐           ┌───────▼──────┐
+               │   LAN/Private │          │     DMZ      │
+               │192.168.100.0/24│         │ 10.100.0.0/24 │
+               └───────┬──────┘           └───────┬──────┘
+                       │                          │
+              ┌────────┴───────┐         ┌────────┴───────┐
+              │                │         │                │
+       ┌──────▼─────┐  ┌───────▼────┐   ┌▼────────────┐  ┌▼────────────┐
+       │ Database VM│  │Monitoring VM│   │ Web Server  │  │ Application │
+       │            │  │             │   │             │  │   Server    │
+       └────────────┘  └─────────────┘   └─────────────┘  └─────────────┘</code></pre>
+        </div>
+      </section>
+
+      <section id="prerequisites">
+        <h2>Prerequisites</h2>
+        <ul>
+          <li>CentOS Stream 9 installed on your Gateway VM</li>
+          <li>
+            Three network interfaces configured:
+            <ul>
+              <li>
+                WAN interface (eth0) - connected to internet/host machine with
+                DHCP
+              </li>
+              <li>
+                LAN interface (eth1) - connected to internal network with static
+                IP 192.168.100.1/24
+              </li>
+              <li>
+                DMZ interface (eth2) - connected to DMZ network with static IP
+                10.100.0.1/24
+              </li>
+            </ul>
+          </li>
+          <li>Root access or sudo privileges</li>
+        </ul>
+
+        <div class="exercise-card">
+          <h4>Setting Up Network Interfaces</h4>
+          <p>
+            Before starting, verify your network interfaces are properly
+            configured:
+          </p>
+          <pre><code># Check network interfaces
+ip addr show</code></pre>
+
+          <p>
+            Configure static IP for LAN interface (if not already configured):
+          </p>
+          <pre><code># Create network configuration for eth1 (LAN)
+sudo nano /etc/sysconfig/network-scripts/ifcfg-eth1</code></pre>
+          <p>Add the following:</p>
+          <pre><code>TYPE=Ethernet
+BOOTPROTO=static
+NAME=eth1
+DEVICE=eth1
+ONBOOT=yes
+IPADDR=192.168.100.1
+NETMASK=255.255.255.0
+</code></pre>
+
+          <p>Configure static IP for DMZ interface:</p>
+          <pre><code># Create network configuration for eth2 (DMZ)
+sudo nano /etc/sysconfig/network-scripts/ifcfg-eth2</code></pre>
+          <p>Add the following:</p>
+          <pre><code>TYPE=Ethernet
+BOOTPROTO=static
+NAME=eth2
+DEVICE=eth2
+ONBOOT=yes
+IPADDR=10.100.0.1
+NETMASK=255.255.255.0
+</code></pre>
+
+          <p>Restart the network service to apply changes:</p>
+          <pre><code>sudo systemctl restart NetworkManager</code></pre>
+        </div>
+      </section>
+
+      <section id="firewall">
+        <h2>1. Configuring Firewall Rules with iptables/nftables</h2>
+
+        <div class="exercise-card">
+          <h4>Step 1.1: Install Required Packages</h4>
+          <pre><code>sudo dnf update -y
+sudo dnf install -y iptables-services nftables</code></pre>
+          <p>
+            CentOS Stream 9 comes with nftables as the default firewall
+            management tool, but we'll also install iptables-services for
+            compatibility.
+          </p>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 1.2: Configure Basic System Settings</h4>
+          <pre><code># Enable IP forwarding (required for routing and NAT)
+sudo echo "net.ipv4.ip_forward = 1" > /etc/sysctl.d/99-ipforward.conf
+sudo sysctl -p /etc/sysctl.d/99-ipforward.conf</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 1.3: Basic Firewall Configuration with nftables</h4>
+          <p>Create a new nftables configuration file:</p>
+          <pre><code>sudo nano /etc/nftables/gateway-firewall.nft</code></pre>
+          <p>
+            Add the following configuration (updated for 3 network interfaces):
+          </p>
+          <pre><code>#!/usr/sbin/nft -f
+
+# Clear existing rules
+flush ruleset
+
+# Define variables for interfaces
+define WAN_IF = eth0  # WAN interface (DHCP)
+define LAN_IF = eth1  # LAN interface (192.168.100.1/24)
+define DMZ_IF = eth2  # DMZ interface (10.100.0.1/24)
+
+table ip filter {
+    # Base chain for incoming packets
+    chain input {
+        type filter hook input priority 0; policy drop;
+        
+        # Allow established connections
+        ct state established,related accept
+        
+        # Allow localhost traffic
+        iif lo accept
+        
+        # Allow SSH from LAN
+        iif $LAN_IF tcp dport 22 accept
+        
+        # Allow SSH from WAN (be cautious with this in production)
+        iif $WAN_IF tcp dport 22 accept
+        
+        # Allow OpenVPN traffic
+        iif $WAN_IF udp dport 1194 accept
+        
+        # Allow DHCP on WAN interface
+        iif $WAN_IF udp sport 67 udp dport 68 accept
+        
+        # ICMP (ping) - useful for troubleshooting
+        ip protocol icmp accept
+        
+        # Drop invalid packets
+        ct state invalid drop
+        
+        # Log dropped packets
+        log prefix "nftables-input-dropped: " limit rate 5/minute
+    }
+    
+    # Base chain for forwarded packets (between interfaces)
+    chain forward {
+        type filter hook forward priority 0; policy drop;
+        
+        # Allow established connections
+        ct state established,related accept
+        
+        # Allow LAN to WAN and DMZ
+        iif $LAN_IF oif $WAN_IF accept
+        iif $LAN_IF oif $DMZ_IF accept
+        
+        # Allow DMZ to WAN
+        iif $DMZ_IF oif $WAN_IF accept
+        
+        # Allow specific services from WAN to DMZ
+        iif $WAN_IF oif $DMZ_IF tcp dport { 80, 443 } accept
+        
+        # Drop invalid packets
+        ct state invalid drop
+        
+        # Log dropped packets
+        log prefix "nftables-forward-dropped: " limit rate 5/minute
+    }
+    
+    # Base chain for outgoing packets
+    chain output {
+        type filter hook output priority 0; policy accept;
+    }
+}
+
+# NAT table for network address translation
+table ip nat {
+    chain prerouting {
+        type nat hook prerouting priority -100;
+        
+        # Port forwarding for web services (HTTP/HTTPS) to Web Server VM in DMZ
+        iif $WAN_IF tcp dport 80 dnat to 10.100.0.10:80
+        iif $WAN_IF tcp dport 443 dnat to 10.100.0.10:443
+    }
+    
+    chain postrouting {
+        type nat hook postrouting priority 100;
+        
+        # Masquerade LAN and DMZ to WAN
+        oif $WAN_IF ip saddr 192.168.100.0/24 masquerade
+        oif $WAN_IF ip saddr 10.100.0.0/24 masquerade
+    }
+}</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 1.4: Apply and Enable nftables Configuration</h4>
+          <pre><code># Apply the configuration
+sudo nft -f /etc/nftables/gateway-firewall.nft
+
+# Verify the rules were loaded
+sudo nft list ruleset
+
+# Save the current configuration
+sudo nft list ruleset > /etc/sysconfig/nftables.conf
+
+# Enable and start nftables service
+sudo systemctl enable nftables
+sudo systemctl start nftables</code></pre>
+        </div>
+      </section>
+
+      <section id="openvpn">
+        <h2>2. Setting up OpenVPN Server with Certificate Authentication</h2>
+
+        <div class="exercise-card">
+          <h4>Step 2.1: Install OpenVPN and Easy-RSA</h4>
+          <pre><code>sudo dnf install -y epel-release
+sudo dnf install -y openvpn easy-rsa</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 2.2: Set Up the Certificate Authority</h4>
+          <pre><code># Create directory structure
+sudo mkdir -p /etc/openvpn/server/easy-rsa
+sudo cp -r /usr/share/easy-rsa/3/* /etc/openvpn/server/easy-rsa/
+
+# Initialize the PKI
+cd /etc/openvpn/server/easy-rsa
+sudo ./easyrsa init-pki
+
+# Create CA certificate
+sudo ./easyrsa build-ca nopass
+
+# Generate server certificate and key
+sudo ./easyrsa gen-req server nopass
+sudo ./easyrsa sign-req server server
+
+# Generate Diffie-Hellman parameters
+sudo ./easyrsa gen-dh
+
+# Generate HMAC signature
+sudo openvpn --genkey --secret /etc/openvpn/server/ta.key</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 2.3: Generate Client Certificates</h4>
+          <pre><code># Create client certificate and key
+cd /etc/openvpn/server/easy-rsa
+sudo ./easyrsa gen-req client1 nopass
+sudo ./easyrsa sign-req client client1
+
+# Copy client certificates to a secure location
+sudo mkdir -p /etc/openvpn/client/client1
+sudo cp pki/ca.crt /etc/openvpn/client/client1/
+sudo cp pki/issued/client1.crt /etc/openvpn/client/client1/
+sudo cp pki/private/client1.key /etc/openvpn/client/client1/
+sudo cp /etc/openvpn/server/ta.key /etc/openvpn/client/client1/</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 2.4: Configure OpenVPN Server</h4>
+          <pre><code>sudo cp /usr/share/doc/openvpn/sample/sample-config-files/server.conf /etc/openvpn/server/
+
+# Edit the server configuration
+sudo nano /etc/openvpn/server/server.conf</code></pre>
+          <p>Make the following changes to the server configuration:</p>
+          <pre><code># Specify the location of certificates
+ca /etc/openvpn/server/easy-rsa/pki/ca.crt
+cert /etc/openvpn/server/easy-rsa/pki/issued/server.crt
+key /etc/openvpn/server/easy-rsa/pki/private/server.key
+dh /etc/openvpn/server/easy-rsa/pki/dh.pem
+
+# HMAC authentication
+tls-auth /etc/openvpn/server/ta.key 0
+
+# Network configuration
+server 10.8.0.0 255.255.255.0  # VPN subnet
+push "route 192.168.100.0 255.255.255.0"  # Route to LAN
+push "route 10.100.0.0 255.255.255.0"     # Route to DMZ
+push "redirect-gateway def1 bypass-dhcp"
+push "dhcp-option DNS 8.8.8.8"
+push "dhcp-option DNS 8.8.4.4"
+
+# Cipher settings
+cipher AES-256-GCM
+auth SHA256
+
+# User and group (for extra security)
+user nobody
+group nobody
+
+# Additional security measures
+tls-version-min 1.2
+tls-cipher TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 2.5: Create Client Configuration File</h4>
+          <pre><code>sudo nano /etc/openvpn/client/client1/client.ovpn</code></pre>
+          <p>Add the following content (adjust the server address):</p>
+          <pre><code>client
+dev tun
+proto udp
+remote your.server.ip.address 1194
+resolv-retry infinite
+nobind
+persist-key
+persist-tun
+remote-cert-tls server
+cipher AES-256-GCM
+auth SHA256
+key-direction 1
+verb 3
+
+&lt;ca&gt;
+# Paste contents of ca.crt here
+&lt;/ca&gt;
+&lt;cert&gt;
+# Paste contents of client1.crt here
+&lt;/cert&gt;
+&lt;key&gt;
+# Paste contents of client1.key here
+&lt;/key&gt;
+&lt;tls-auth&gt;
+# Paste contents of ta.key here
+&lt;/tls-auth&gt;</code></pre>
+          <p>To automatically include the certificate and key files:</p>
+          <pre><code>cd /etc/openvpn/client/client1
+sudo bash -c 'echo -e "\n<ca>" >> client.ovpn'
+sudo bash -c 'cat ca.crt >> client.ovpn'
+sudo bash -c 'echo -e "</ca>\n<cert>" >> client.ovpn'
+sudo bash -c 'cat client1.crt >> client.ovpn'
+sudo bash -c 'echo -e "</cert>\n<key>" >> client.ovpn'
+sudo bash -c 'cat client1.key >> client.ovpn'
+sudo bash -c 'echo -e "</key>\n<tls-auth>" >> client.ovpn'
+sudo bash -c 'cat ta.key >> client.ovpn'
+sudo bash -c 'echo -e "</tls-auth>" >> client.ovpn'</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 2.6: Start and Enable OpenVPN Service</h4>
+          <pre><code>sudo systemctl start openvpn-server@server
+sudo systemctl enable openvpn-server@server
+sudo systemctl status openvpn-server@server</code></pre>
+        </div>
+      </section>
+
+      <section id="port-forwarding">
+        <h2>3. Implementing Port Forwarding for Web Services</h2>
+
+        <div class="exercise-card">
+          <h4>Step 3.1: Configure Port Forwarding in nftables</h4>
+          <p>
+            We've already configured basic port forwarding in our nftables
+            ruleset. Here's how to modify or add additional rules if needed:
+          </p>
+          <pre><code>sudo nano /etc/nftables/gateway-firewall.nft</code></pre>
+          <p>
+            Locate the prerouting chain in the nat table and adjust the port
+            forwarding rules:
+          </p>
+          <pre><code># Port forwarding for web services
+# Forward HTTP traffic to Web Server VM in DMZ
+iif $WAN_IF tcp dport 80 dnat to 10.100.0.10:80
+
+# Forward HTTPS traffic to Web Server VM in DMZ
+iif $WAN_IF tcp dport 443 dnat to 10.100.0.10:443
+
+# Optional: Forward additional services as needed
+# Example: SSH on a non-standard port
+# iif $WAN_IF tcp dport 2222 dnat to 10.100.0.10:22</code></pre>
+          <p>
+            Also ensure the forward chain in the filter table allows this
+            traffic:
+          </p>
+          <pre><code># Allow forwarded HTTP/HTTPS traffic to web server in DMZ
+iif $WAN_IF oif $DMZ_IF ip daddr 10.100.0.10 tcp dport { 80, 443 } accept</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 3.2: Apply and Test the Port Forwarding Rules</h4>
+          <pre><code># Apply the updated configuration
+sudo nft -f /etc/nftables/gateway-firewall.nft
+
+# Verify the rules were loaded
+sudo nft list ruleset
+
+# Save the current configuration
+sudo nft list ruleset > /etc/sysconfig/nftables.conf
+
+# Restart nftables service
+sudo systemctl restart nftables</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 3.3: Test the Port Forwarding</h4>
+          <p>From an external machine, test access to your web services:</p>
+          <pre><code># Test HTTP connectivity
+curl http://your.gateway.ip.address
+
+# Test HTTPS connectivity
+curl -k https://your.gateway.ip.address</code></pre>
+          <p>
+            Note: You should set up a web server on your Web Server VM
+            (10.100.0.10) for these tests to succeed.
+          </p>
+        </div>
+      </section>
+
+      <section id="security">
+        <h2>Additional Security Considerations</h2>
+        <div class="exercise-card">
+          <h4>SSH Hardening</h4>
+          <p>Edit SSH server configuration for improved security:</p>
+          <pre><code>sudo nano /etc/ssh/sshd_config</code></pre>
+          <p>Add or modify the following settings:</p>
+          <pre><code># Disable root login
+PermitRootLogin no
+
+# Use key authentication only
+PasswordAuthentication no
+
+# Limit user access
+AllowUsers adminuser
+
+# Change default port (optional, requires firewall update)
+# Port 2222</code></pre>
+          <pre><code>sudo systemctl restart sshd</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Fail2Ban Setup</h4>
+          <p>
+            Install and configure Fail2Ban to protect against brute force
+            attacks:
+          </p>
+          <pre><code>sudo dnf install -y epel-release
+sudo dnf install -y fail2ban
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban
+
+# Configure jail for SSH
+sudo nano /etc/fail2ban/jail.local</code></pre>
+          <p>Add the following configuration:</p>
+          <pre><code>[DEFAULT]
+bantime = 3600
+findtime = 600
+maxretry = 5
+
+[sshd]
+enabled = true
+port = ssh
+filter = sshd
+logpath = /var/log/secure
+maxretry = 3</code></pre>
+          <pre><code>sudo systemctl restart fail2ban</code></pre>
+        </div>
+      </section>
+
+      <section id="troubleshooting">
+        <h2>Troubleshooting Tips</h2>
+        <div class="exercise-card">
+          <h4>Viewing firewall logs</h4>
+          <pre><code># View firewall logs
+sudo tail -f /var/log/messages | grep nftables</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Testing connectivity</h4>
+          <pre><code># Check if a port is open
+nc -zv your.server.ip.address 1194
+nc -zv your.server.ip.address 80
+
+# Test routing between networks
+ping -c 4 192.168.100.10
+ping -c 4 10.100.0.10
+
+# Check current network connections
+ss -tuln</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>OpenVPN Troubleshooting</h4>
+          <pre><code># Check OpenVPN status
+sudo systemctl status openvpn-server@server
+
+# View OpenVPN logs
+sudo tail -f /var/log/messages | grep openvpn
+
+# Test OpenVPN configuration
+sudo openvpn --config /etc/openvpn/server/server.conf --verb 4</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Network Interface Troubleshooting</h4>
+          <pre><code># Check network interfaces
+ip addr show
+
+# Check routing table
+ip route show
+
+# Test connectivity to different networks
+ping -c 4 8.8.8.8        # Test internet connectivity
+ping -c 4 192.168.100.10  # Test LAN connectivity
+ping -c 4 10.100.0.10     # Test DMZ connectivity</code></pre>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <p>&copy; 2024 Enterprise Linux Infrastructure Simulation Tutorial</p>
+        <p>
+          Part of the Coastline Community College Cyber Xploit Club Competition
+          Workshop Training Series (Week 7)
+        </p>
+        <p>
+          Designed and developed by Mike Crawford for training students to
+          compete in WRCCDC and National CPTC
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
