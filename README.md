@@ -4,7 +4,7 @@ This repository contains tutorial materials for setting up an Enterprise Linux I
 
 ## About This Workshop
 
-This is the Week 7 Workshop content for the Coastline Community College Cyber Xploit Club Competition Workshop Training series. The content is designed and developed by Mike Crawford to prepare students for cybersecurity competitions like the Western Regional Collegiate Cyber Defense Competition (WRCCDC) and the National Collegiate Penetration Testing Competition (CPTC).
+This is the Week 7 Workshop content for the Coastline Community College Cyber Xploit Club Competition Workshop Training series. Created by devurandom11 for preparing students for cybersecurity competitions like WRCCDC and CPTC.
 
 ## Contents
 
