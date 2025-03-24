@@ -4,7 +4,7 @@ This repository contains tutorial materials for setting up an Enterprise Linux I
 
 ## About This Workshop
 
-This is the Week 7 Workshop content for the Coastline Community College Cyber Xploit Club Competition Workshop Training series. Created by devurandom11 for preparing students for cybersecurity competitions like WRCCDC and CPTC.
+This is the Week 7 Workshop content for the Coastline Community College Cyber Xploit Club Competition Workshop Training series. Created by [devurandom11](https://github.com/devurandom11) for preparing students for cybersecurity competitions like WRCCDC and CPTC.
 
 ## Contents
 
