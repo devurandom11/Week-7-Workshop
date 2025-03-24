@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      Application Server Setup Guide - Enterprise Linux Infrastructure
+    </title>
+    <style>
+      :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --light-color: #ecf0f1;
+        --dark-color: #34495e;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        line-height: 1.6;
+        color: #333;
+        background-color: var(--light-color);
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+
+      header {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 1rem 0;
+      }
+
+      header h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+      }
+
+      nav {
+        background-color: var(--dark-color);
+        padding: 0.5rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      nav ul {
+        list-style: none;
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      nav ul li {
+        margin-right: 1rem;
+      }
+
+      nav ul li a {
+        color: white;
+        text-decoration: none;
+        padding: 0.5rem;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+      }
+
+      nav ul li a:hover {
+        background-color: var(--secondary-color);
+      }
+
+      main {
+        padding: 2rem 0;
+      }
+
+      section {
+        margin-bottom: 3rem;
+        background-color: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h2 {
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--secondary-color);
+      }
+
+      h3 {
+        color: var(--dark-color);
+        margin: 1.5rem 0 1rem;
+      }
+
+      h4 {
+        color: var(--dark-color);
+        margin: 1.2rem 0 0.8rem;
+      }
+
+      p {
+        margin-bottom: 1rem;
+      }
+
+      ul,
+      ol {
+        margin-left: 2rem;
+        margin-bottom: 1.5rem;
+      }
+
+      li {
+        margin-bottom: 0.5rem;
+      }
+
+      .exercise-card {
+        border-left: 4px solid var(--secondary-color);
+        padding-left: 1.5rem;
+        margin: 1.5rem 0;
+        background-color: #f9f9f9;
+        padding: 1rem 1.5rem;
+        border-radius: 0 8px 8px 0;
+      }
+
+      .exercise-card h4 {
+        color: var(--secondary-color);
+        margin-top: 0;
+      }
+
+      footer {
+        background-color: var(--primary-color);
+        color: white;
+        text-align: center;
+        padding: 1.5rem 0;
+        margin-top: 2rem;
+      }
+
+      pre {
+        background-color: #2b2b2b;
+        color: #f8f8f2;
+        padding: 1rem;
+        border-radius: 4px;
+        overflow-x: auto;
+        position: relative;
+        margin: 1rem 0;
+      }
+
+      code {
+        font-family: "Courier New", Courier, monospace;
+        font-size: 0.9rem;
+      }
+
+      .architecture-diagram {
+        margin: 2rem 0;
+        padding: 1rem;
+        background-color: #f0f8ff;
+        border: 1px solid #d0e0f0;
+        border-radius: 8px;
+      }
+
+      .architecture-diagram h4 {
+        color: var(--secondary-color);
+        margin-bottom: 1rem;
+      }
+
+      .architecture-diagram pre {
+        background-color: white;
+        color: #333;
+        border: 1px solid #ddd;
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-bottom: 1rem;
+        padding: 0.5rem 1rem;
+        background-color: var(--secondary-color);
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+
+      .back-link:hover {
+        background-color: var(--dark-color);
+      }
+
+      .comparison-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1.5rem 0;
+      }
+
+      .comparison-table th,
+      .comparison-table td {
+        border: 1px solid #ddd;
+        padding: 8px 12px;
+        text-align: left;
+      }
+
+      .comparison-table th {
+        background-color: var(--light-color);
+        color: var(--dark-color);
+      }
+
+      .comparison-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+
+      @media (max-width: 768px) {
+        header h1 {
+          font-size: 1.8rem;
+        }
+
+        nav ul {
+          flex-direction: column;
+        }
+
+        nav ul li {
+          margin-right: 0;
+          margin-bottom: 0.5rem;
+        }
+      }
+    </style>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Add copy buttons to all code blocks
+        const codeBlocks = document.querySelectorAll("pre code");
+        codeBlocks.forEach(function (codeBlock, index) {
+          // Create wrapper div with position relative
+          const wrapper = document.createElement("div");
+          wrapper.style.position = "relative";
+
+          // Create copy button
+          const copyButton = document.createElement("button");
+          copyButton.innerHTML = "Copy";
+          copyButton.className = "copy-button";
+          copyButton.style.position = "absolute";
+          copyButton.style.top = "5px";
+          copyButton.style.right = "5px";
+          copyButton.style.padding = "3px 8px";
+          copyButton.style.backgroundColor = "var(--secondary-color)";
+          copyButton.style.color = "white";
+          copyButton.style.border = "none";
+          copyButton.style.borderRadius = "4px";
+          copyButton.style.fontSize = "12px";
+          copyButton.style.cursor = "pointer";
+          copyButton.dataset.index = index;
+
+          // Replace the code block with the wrapper
+          const pre = codeBlock.parentNode;
+          const parent = pre.parentNode;
+          wrapper.appendChild(pre);
+          wrapper.appendChild(copyButton);
+          parent.appendChild(wrapper);
+
+          // Add click event to copy button
+          copyButton.addEventListener("click", function () {
+            const textToCopy = codeBlock.textContent;
+
+            // Create a temporary textarea element to copy text
+            const textarea = document.createElement("textarea");
+            textarea.value = textToCopy;
+            textarea.setAttribute("readonly", "");
+            textarea.style.position = "absolute";
+            textarea.style.left = "-9999px";
+            document.body.appendChild(textarea);
+
+            // Select and copy text
+            textarea.select();
+            document.execCommand("copy");
+
+            // Clean up
+            document.body.removeChild(textarea);
+
+            // Show feedback
+            const originalText = copyButton.innerHTML;
+            copyButton.innerHTML = "Copied!";
+            setTimeout(function () {
+              copyButton.innerHTML = originalText;
+            }, 1500);
+          });
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>Application Server Setup Guide</h1>
+        <p>
+          A comprehensive step-by-step guide for configuring the Application
+          Server VM
+        </p>
+      </div>
+    </header>
+
+    <nav>
+      <div class="container">
+        <ul>
+          <li><a href="enterprise_linux_tutorial.html">Main Tutorial</a></li>
+          <li><a href="#overview">Overview</a></li>
+          <li><a href="#prerequisites">Prerequisites</a></li>
+          <li><a href="#docker">Docker Installation</a></li>
+          <li><a href="#kubernetes">Kubernetes Setup</a></li>
+          <li><a href="#wordpress">WordPress Deployment</a></li>
+          <li><a href="#security">Security Considerations</a></li>
+          <li><a href="#troubleshooting">Troubleshooting</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="container">
+      <a href="enterprise_linux_tutorial.html" class="back-link"
+        >&larr; Back to Main Tutorial</a
+      >
+
+      <section id="overview">
+        <h2>Overview</h2>
+        <p>
+          This guide walks you through setting up an Application Server VM for
+          your Enterprise Linux Infrastructure. The Application Server VM hosts
+          containerized applications within the DMZ network, using Docker and
+          Kubernetes (minikube) to manage containers. You'll deploy a WordPress
+          application as an example of containerized service deployment.
+        </p>
+
+        <div class="architecture-diagram">
+          <h4>Application Server Architecture</h4>
+          <p>We'll be setting up the following components:</p>
+          <pre><code>                                External Users
+                                       │
+                                       ▼
+                                  [ Internet ]
+                                       │
+                                       ▼
+                          Gateway/Router (10.100.0.1)
+                                       │
+                                       ▼
+                         ┌──────────────────────────┐
+                         │                          │
+                         │  Application Server VM   │
+                         │    (10.100.0.20)         │
+                         │                          │
+                         │ ┌────────────────────┐   │
+                         │ │      Docker        │   │
+                         │ └──────────┬─────────┘   │
+                         │            │             │
+                         │            ▼             │
+                         │ ┌────────────────────┐   │
+                         │ │   Kubernetes       │   │
+                         │ │    (minikube)      │   │
+                         │ └──────────┬─────────┘   │
+                         │            │             │
+                         │            ▼             │
+                         │ ┌────────────────────┐   │
+                         │ │   WordPress        │   │
+                         │ │   Containers       │   │
+                         │ └────────────────────┘   │
+                         │                          │
+                         └──────────────────────────┘
+                                      │
+                                      ▼
+                               Database Server
+                             (192.168.100.20)</code></pre>
+        </div>
+      </section>
+
+      <section id="prerequisites">
+        <h2>Prerequisites</h2>
+        <ul>
+          <li>CentOS Stream 9 installed on your Application Server VM</li>
+          <li>Network interface configured with static IP 10.100.0.20/24 (DMZ network)</li>
+          <li>Root access or sudo privileges</li>
+          <li>Gateway VM properly configured as described in the Gateway Configuration Guide</li>
+          <li>Inbound port forwarding set up on the Gateway for ports 80, 443, and 8080 (for WordPress)</li>
+          <li>At least 2GB RAM and 2 CPU cores for Kubernetes (minikube)</li>
+        </ul>
+
+        <div class="exercise-card">
+          <h4>Setup Network Interface</h4>
+          <p>
+            Before starting, verify your network interface is properly configured:
+          </p>
+          <pre><code># Check network interfaces
+ip addr show</code></pre>
+          
+          <p>Configure static IP (if not already configured):</p>
+          <pre><code># Create/edit network configuration 
+sudo nano /etc/sysconfig/network-scripts/ifcfg-ens192</code></pre>
+          <p>Add the following:</p>
+          <pre><code>TYPE=Ethernet
+BOOTPROTO=static
+NAME=ens192
+DEVICE=ens192
+ONBOOT=yes
+IPADDR=10.100.0.20
+NETMASK=255.255.255.0
+GATEWAY=10.100.0.1
+DNS1=8.8.8.8
+DNS2=8.8.4.4
+</code></pre>
+
+          <p>Restart the network service to apply changes:</p>
+          <pre><code>sudo systemctl restart NetworkManager</code></pre>
+        </div>
+      </section>
+
+      <section id="docker">
+        <h2>1. Docker Installation and Setup</h2>
+        
+        <p>Docker is a platform for developing, shipping, and running applications in containers. In this section, we'll install Docker and configure it for use with our WordPress deployment.</p>
+
+        <div class="exercise-card">
+          <h4>Step 1.1: Update System and Install Required Packages</h4>
+          <pre><code># Update system packages
+sudo dnf update -y
+
+# Install required packages
+sudo dnf install -y yum-utils device-mapper-persistent-data lvm2
+
+# Add Docker repository
+sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+# Install Docker Engine
+sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 1.2: Start and Enable Docker Service</h4>
+          <pre><code># Start Docker service
+sudo systemctl start docker
+
+# Enable Docker to start on boot
+sudo systemctl enable docker
+
+# Verify Docker installation
+sudo docker run hello-world
+
+# Check Docker version
+docker --version</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 1.3: Configure Docker for Non-Root User (Optional)</h4>
+          <pre><code># Create docker group (if not already created)
+sudo groupadd docker
+
+# Add your user to the docker group
+sudo usermod -aG docker $USER
+
+# Apply new group membership (log out and log back in for permanent effect)
+newgrp docker
+
+# Verify you can run docker commands without sudo
+docker run hello-world</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 1.4: Configure Docker Storage Driver</h4>
+          <pre><code># Create Docker daemon configuration file
+sudo mkdir -p /etc/docker
+sudo tee /etc/docker/daemon.json <<EOF
+{
+  "storage-driver": "overlay2",
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m"
+  }
+}
+EOF
+
+# Restart Docker service to apply changes
+sudo systemctl restart docker</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 1.5: Configure SELinux for Docker</h4>
+          <pre><code># Set SELinux to allow Docker socket access
+sudo setsebool -P container_manage_cgroup true
+
+# Set SELinux to allow containers to connect to the network
+sudo setsebool -P container_connect_any true
+
+# Verify SELinux settings
+getsebool -a | grep container</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Step 1.6: Configure Firewall for Docker</h4>
+          <pre><code># Allow traffic to Docker ports
+sudo firewall-cmd --permanent --zone=public --add-port=80/tcp
+sudo firewall-cmd --permanent --zone=public --add-port=443/tcp
+sudo firewall-cmd --permanent --zone=public --add-port=2376/tcp
+sudo firewall-cmd --permanent --zone=public --add-port=2377/tcp
+sudo firewall-cmd --permanent --zone=public --add-port=7946/tcp
+sudo firewall-cmd --permanent --zone=public --add-port=7946/udp
+sudo firewall-cmd --permanent --zone=public --add-port=4789/udp
+sudo firewall-cmd --reload</code></pre>
+        </div>
+      </section>
+
+      <section id="kubernetes">
+        <h2>2. Kubernetes (minikube) Setup</h2>
+        
+        <p>Kubernetes is an open-source platform for managing containerized workloads and services. We'll use minikube, a tool that makes it easy to run Kubernetes locally.</p>
+        
+        <div class="exercise-card">
+          <h4>Step 2.1: Install Required Dependencies</h4>
+          <pre><code># Install conntrack (required by minikube)
+sudo dnf install -y conntrack
+
+# Install socat (required for port forwarding)
+sudo dnf install -y socat
+
+# Install additional tools
+sudo dnf install -y kubectl</code></pre>
+        </div>
+        
+        <div class="exercise-card">
+          <h4>Step 2.2: Install minikube</h4>
+          <pre><code># Download minikube binary
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+
+# Install minikube
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+# Verify installation
+minikube version</code></pre>
+        </div>
+        
+        <div class="exercise-card">
+          <h4>Step 2.3: Configure SELinux for minikube</h4>
+          <pre><code># Allow virtualization in SELinux
+sudo setsebool -P virt_sandbox_use_all_caps 1
+sudo setsebool -P virt_use_nfs 1
+
+# Create a local policy for minikube if needed
+sudo grep minikube /var/log/audit/audit.log | audit2allow -M minikube
+sudo semodule -i minikube.pp</code></pre>
+        </div>
+        
+        <div class="exercise-card">
+          <h4>Step 2.4: Start minikube with Docker Driver</h4>
+          <pre><code># Start minikube with Docker as the driver
+minikube start --driver=docker
+
+# Verify minikube status
+minikube status
+
+# Enable minikube addons
+minikube addons enable ingress
+minikube addons enable dashboard
+minikube addons enable metrics-server</code></pre>
+        </div>
+        
+        <div class="exercise-card">
+          <h4>Step 2.5: Configure kubectl to Work with minikube</h4>
+          <pre><code># Set kubectl context to minikube
+kubectl config use-context minikube
+
+# Verify the connection to the Kubernetes cluster
+kubectl get nodes
+
+# Get cluster information
+kubectl cluster-info</code></pre>
+        </div>
+      </section>
+
+      <section id="wordpress">
+        <h2>3. WordPress Deployment with Kubernetes</h2>
+        
+        <p>Now that we have Docker and Kubernetes (minikube) set up, we'll deploy WordPress using Kubernetes manifests to create a scalable and manageable deployment.</p>
+        
+        <div class="exercise-card">
+          <h4>Step 3.1: Create Kubernetes Namespace for WordPress</h4>
+          <pre><code># Create a namespace for WordPress
+kubectl create namespace wordpress
+
+# Set the current namespace to wordpress
+kubectl config set-context --current --namespace=wordpress</code></pre>
+        </div>
+        
+        <div class="exercise-card">
+          <h4>Step 3.2: Create Persistent Volume Claims</h4>
+          <p>Create a file for the WordPress PVC:</p>
+          <pre><code>cat << EOF > wordpress-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wordpress-pvc
+  namespace: wordpress
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+EOF
+
+# Apply the PVC configuration
+kubectl apply -f wordpress-pvc.yaml</code></pre>
+
+          <p>Create a file for the MySQL PVC:</p>
+          <pre><code>cat << EOF > mysql-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+  namespace: wordpress
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+EOF
+
+# Apply the PVC configuration
+kubectl apply -f mysql-pvc.yaml</code></pre>
+        </div>
+        
+        <div class="exercise-card">
+          <h4>Step 3.3: Create Secret for MySQL Password</h4>
+          <pre><code># Generate a random password
+MYSQL_PASSWORD=$(openssl rand -base64 12)
+
+# Create a Kubernetes secret for MySQL
+kubectl create secret generic mysql-secret \
+  --from-literal=mysql-root-password=$MYSQL_PASSWORD \
+  --from-literal=mysql-password=$MYSQL_PASSWORD
+
+# Note: Make sure to save this password somewhere safe
+echo "MySQL Password: $MYSQL_PASSWORD" > ~/mysql-credentials.txt
+chmod 600 ~/mysql-credentials.txt</code></pre>
+        </div>
+        
+        <div class="exercise-card">
+          <h4>Step 3.4: Deploy MySQL Database</h4>
+          <pre><code>cat << EOF > mysql-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: wordpress
+  labels:
+    app: wordpress
+spec:
+  selector:
+    matchLabels:
+      app: wordpress
+      tier: mysql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: wordpress
+        tier: mysql
+    spec:
+      containers:
+      - image: mysql:5.7
+        name: mysql
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql-root-password
+        - name: MYSQL_DATABASE
+          value: wordpress
+        - name: MYSQL_USER
+          value: wordpress
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql-password
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: mysql-pvc
+EOF
+
+# Apply the MySQL deployment
+kubectl apply -f mysql-deployment.yaml</code></pre>
+        </div>
+        
+        <div class="exercise-card">
+          <h4>Step 3.5: Create MySQL Service</h4>
+          <pre><code>cat << EOF > mysql-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: wordpress
+  labels:
+    app: wordpress
+spec:
+  ports:
+    - port: 3306
+  selector:
+    app: wordpress
+    tier: mysql
+  clusterIP: None
+EOF
+
+# Apply the MySQL service
+kubectl apply -f mysql-service.yaml</code></pre>
+        </div>
+        
+        <div class="exercise-card">
+          <h4>Step 3.6: Deploy WordPress</h4>
+          <pre><code>cat << EOF > wordpress-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+  namespace: wordpress
+  labels:
+    app: wordpress
+spec:
+  selector:
+    matchLabels:
+      app: wordpress
+      tier: frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: wordpress
+        tier: frontend
+    spec:
+      containers:
+      - image: wordpress:latest
+        name: wordpress
+        env:
+        - name: WORDPRESS_DB_HOST
+          value: mysql
+        - name: WORDPRESS_DB_USER
+          value: wordpress
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql-password
+        - name: WORDPRESS_DB_NAME
+          value: wordpress
+        ports:
+        - containerPort: 80
+          name: wordpress
+        volumeMounts:
+        - name: wordpress-persistent-storage
+          mountPath: /var/www/html
+      volumes:
+      - name: wordpress-persistent-storage
+        persistentVolumeClaim:
+          claimName: wordpress-pvc
+EOF
+
+# Apply the WordPress deployment
+kubectl apply -f wordpress-deployment.yaml</code></pre>
+        </div>
+        
+        <div class="exercise-card">
+          <h4>Step 3.7: Create WordPress Service</h4>
+          <pre><code>cat << EOF > wordpress-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress
+  namespace: wordpress
+  labels:
+    app: wordpress
+spec:
+  ports:
+    - port: 80
+  selector:
+    app: wordpress
+    tier: frontend
+  type: NodePort
+EOF
+
+# Apply the WordPress service
+kubectl apply -f wordpress-service.yaml</code></pre>
+        </div>
+        
+        <div class="exercise-card">
+          <h4>Step 3.8: Access WordPress</h4>
+          <pre><code># Get the assigned NodePort for WordPress
+kubectl get service wordpress -o jsonpath="{.spec.ports[0].nodePort}"
+
+# Get minikube IP
+minikube ip
+
+# Access WordPress in your browser at:
+# http://<minikube-ip>:<nodeport>
+
+# For external access, we need to configure port forwarding on the Gateway VM
+# Assuming the NodePort is 30080, add this to the Gateway VM nftables configuration:
+# "iif $WAN_IF tcp dport 8080 dnat to 10.100.0.20:30080"
+
+# You can also make WordPress available directly on the Application Server
+# by setting up a port forward with iptables
+sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j DNAT --to-destination $(minikube ip):$(kubectl get service wordpress -o jsonpath="{.spec.ports[0].nodePort}")</code></pre>
+          <p>Complete the WordPress installation by following the on-screen instructions when you access the WordPress URL.</p>
+        </div>
+      </section>
+
+      <section id="security">
+        <h2>4. Security Considerations</h2>
+        
+        <p>Docker and Kubernetes deployments require specific security considerations to protect your containerized applications.</p>
+        
+        <div class="exercise-card">
+          <h4>Step 4.1: Docker Security Best Practices</h4>
+          <ul>
+            <li>Use official images from trusted sources</li>
+            <li>Scan images for vulnerabilities</li>
+            <li>Run containers with limited capabilities</li>
+            <li>Use non-root users inside containers</li>
+          </ul>
+          <pre><code># Install and use Trivy for container scanning
+sudo dnf install -y wget
+wget https://github.com/aquasecurity/trivy/releases/download/v0.19.2/trivy_0.19.2_Linux-64bit.rpm
+sudo dnf install -y ./trivy_0.19.2_Linux-64bit.rpm
+
+# Scan the WordPress image for vulnerabilities
+trivy image wordpress:latest</code></pre>
+        </div>
+        
+        <div class="exercise-card">
+          <h4>Step 4.2: Kubernetes Security Considerations</h4>
+          <pre><code># Use Network Policies to restrict pod communication
+cat << EOF > wordpress-network-policy.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: wordpress-netpol
+  namespace: wordpress
+spec:
+  podSelector:
+    matchLabels:
+      app: wordpress
+      tier: frontend
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+    ports:
+    - protocol: TCP
+      port: 80
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: wordpress
+          tier: mysql
+    ports:
+    - protocol: TCP
+      port: 3306
+EOF
+
+kubectl apply -f wordpress-network-policy.yaml
+
+# Use Resource Limits to prevent resource exhaustion
+kubectl set resources deployment wordpress --limits=cpu=500m,memory=512Mi --requests=cpu=200m,memory=256Mi</code></pre>
+        </div>
+        
+        <div class="exercise-card">
+          <h4>Step 4.3: Configure SELinux for Container Security</h4>
+          <pre><code># Enable SELinux for container isolation
+sudo setsebool -P container_manage_cgroup true
+
+# Configure SELinux context for persistent volumes
+sudo chcon -Rt svirt_sandbox_file_t /path/to/persistent/volumes
+
+# Check SELinux context
+ls -Z /path/to/persistent/volumes</code></pre>
+        </div>
+        
+        <div class="exercise-card">
+          <h4>Step 4.4: Update Gateway Firewall Rules</h4>
+          <p>Update the Gateway VM's firewall to forward traffic to the WordPress site:</p>
+          <pre><code># SSH to the Gateway VM
+ssh administrator@10.100.0.1
+
+# Edit the nftables configuration
+sudo nano /etc/nftables/gateway-firewall.nft
+
+# Add the following rule to the prerouting chain in the nat table:
+# Make WordPress accessible on port 8080 from the internet
+iif $WAN_IF tcp dport 8080 dnat to 10.100.0.20:$(kubectl get service wordpress -o jsonpath="{.spec.ports[0].nodePort}")
+
+# Apply the configuration
+sudo nft -f /etc/nftables/gateway-firewall.nft
+
+# Save the configuration
+sudo nft list ruleset > /etc/sysconfig/nftables.conf
+
+# Restart nftables service
+sudo systemctl restart nftables</code></pre>
+        </div>
+      </section>
+
+      <section id="troubleshooting">
+        <h2>Troubleshooting Tips</h2>
+        <div class="exercise-card">
+          <h4>Docker Troubleshooting</h4>
+          <pre><code># Check Docker service status
+sudo systemctl status docker
+
+# View Docker logs
+sudo journalctl -u docker
+
+# List running containers
+docker ps
+
+# View container logs
+docker logs [container_id]
+
+# Inspect container details
+docker inspect [container_id]</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Kubernetes/minikube Troubleshooting</h4>
+          <pre><code># Check minikube status
+minikube status
+
+# View minikube logs
+minikube logs
+
+# Get pod status
+kubectl get pods
+
+# Describe pod details
+kubectl describe pod [pod_name]
+
+# View pod logs
+kubectl logs [pod_name]
+
+# Debug with an interactive shell
+kubectl exec -it [pod_name] -- /bin/bash</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>WordPress Troubleshooting</h4>
+          <pre><code># Check WordPress pod status
+kubectl get pods -l app=wordpress,tier=frontend
+
+# View WordPress logs
+kubectl logs $(kubectl get pods -l app=wordpress,tier=frontend -o jsonpath="{.items[0].metadata.name}")
+
+# Check MySQL pod status
+kubectl get pods -l app=wordpress,tier=mysql
+
+# View MySQL logs
+kubectl logs $(kubectl get pods -l app=wordpress,tier=mysql -o jsonpath="{.items[0].metadata.name}")
+
+# Check persistent volume claims
+kubectl get pvc</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>Network Troubleshooting</h4>
+          <pre><code># Check service endpoints
+kubectl get endpoints
+
+# Test network connectivity from inside a pod
+kubectl exec -it [pod_name] -- curl mysql:3306
+
+# Check NodePort assignment
+kubectl get svc wordpress -o wide
+
+# Test port forwarding
+curl localhost:$(kubectl get service wordpress -o jsonpath="{.spec.ports[0].nodePort}")</code></pre>
+        </div>
+        
+        <div class="exercise-card">
+          <h4>SELinux Troubleshooting</h4>
+          <pre><code># Check SELinux status
+sestatus
+
+# View SELinux denials related to containers
+sudo ausearch -m avc -ts recent | grep docker
+sudo ausearch -m avc -ts recent | grep container
+
+# Temporarily set SELinux to permissive mode for troubleshooting
+sudo setenforce 0
+
+# After identifying issues, set back to enforcing
+sudo setenforce 1
+
+# Create custom policy module if needed
+sudo ausearch -m avc -ts recent | audit2allow -M mycontainerpolicy
+sudo semodule -i mycontainerpolicy.pp</code></pre>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <p>Coastline Community College Cyber Xploit Club - Competition Workshop Training (Week 7)</p>
+        <p>Created by <a href="https://github.com/devurandom11" target="_blank">devurandom11</a> | WRCCDC and CPTC Training Material</p>
+      </div>
+    </footer>
+  </body>
+</html>
