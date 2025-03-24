@@ -312,42 +312,42 @@
           <p>The Gateway VM will have 3 network interfaces:</p>
           <ul>
             <li>
-              <strong>WAN (eth0):</strong> Connected to external
+              <strong>WAN (ens192):</strong> Connected to external
               network/internet with DHCP
             </li>
             <li>
-              <strong>LAN (eth1):</strong> Connected to internal network with
+              <strong>LAN (ens224):</strong> Connected to internal network with
               static IP 192.168.100.1/24
             </li>
             <li>
-              <strong>DMZ (eth2):</strong> Connected to DMZ network with static
-              IP 10.100.0.1/24
+              <strong>DMZ (ens256):</strong> Connected to DMZ network with
+              static IP 10.100.0.1/24
             </li>
           </ul>
-          <pre><code>                             ┌──────────────┐
-                  Internet────┤     WAN      │
-                             │    (eth0)     │
-                             │     DHCP      │
-                             │               │
-                             │   Gateway VM  │
-                             │               │
-                             │    (eth1)     │
-                             │192.168.100.1/24
-                             │               │
-                             │    (eth2)     │
-                             │ 10.100.0.1/24 │
-                             └──────┬────────┘
+          <pre><code>        ┌--──────────────┐
+                  Internet───┤     WAN        │
+                             │    (ens192)    │
+                             │     DHCP       │
+                             │                │
+                             │   Gateway VM   │
+                             │                │
+                             │    (ens224)    │
+                             │192.168.100.1/24|
+                             │                │
+                             │    (ens256)    │
+                             │ 10.100.0.1/24  │
+                             └──────┬───────-─┘
                                     │
                        ┌────────────┴─────────────┐
                        │                          │
-               ┌───────▼──────┐           ┌───────▼──────┐
-               │   LAN/Private │          │     DMZ      │
-               │192.168.100.0/24│         │ 10.100.0.0/24 │
-               └───────┬──────┘           └───────┬──────┘
+               ┌───────▼──────--┐          ┌───────▼──────┐
+               │   LAN/Private  │          │     DMZ      │
+               │192.168.100.0/24│          │ 10.100.0.0/24│
+               └───────┬────-─-─┘          └──────┬─-─────┘
                        │                          │
               ┌────────┴───────┐         ┌────────┴───────┐
               │                │         │                │
-       ┌──────▼─────┐  ┌───────▼────┐   ┌▼────────────┐  ┌▼────────────┐
+       ┌──────▼─────┐  ┌───────▼────┐    ┌▼────────────┐  ┌▼────────────┐
        │ Database VM│  │Monitoring VM│   │ Web Server  │  │ Application │
        │            │  │             │   │             │  │   Server    │
        └────────────┘  └─────────────┘   └─────────────┘  └─────────────┘</code></pre>
@@ -362,15 +362,15 @@
             Three network interfaces configured:
             <ul>
               <li>
-                WAN interface (eth0) - connected to internet/host machine with
+                WAN interface (ens192) - connected to internet/host machine with
                 DHCP
               </li>
               <li>
-                LAN interface (eth1) - connected to internal network with static
-                IP 192.168.100.1/24
+                LAN interface (ens224) - connected to internal network with
+                static IP 192.168.100.1/24
               </li>
               <li>
-                DMZ interface (eth2) - connected to DMZ network with static IP
+                DMZ interface (ens256) - connected to DMZ network with static IP
                 10.100.0.1/24
               </li>
             </ul>
@@ -390,26 +390,26 @@ ip addr show</code></pre>
           <p>
             Configure static IP for LAN interface (if not already configured):
           </p>
-          <pre><code># Create network configuration for eth1 (LAN)
-sudo nano /etc/sysconfig/network-scripts/ifcfg-eth1</code></pre>
+          <pre><code># Create network configuration for ens224 (LAN)
+sudo nano /etc/sysconfig/network-scripts/ifcfg-ens224</code></pre>
           <p>Add the following:</p>
           <pre><code>TYPE=Ethernet
 BOOTPROTO=static
-NAME=eth1
-DEVICE=eth1
+NAME=ens224
+DEVICE=ens224
 ONBOOT=yes
 IPADDR=192.168.100.1
 NETMASK=255.255.255.0
 </code></pre>
 
           <p>Configure static IP for DMZ interface:</p>
-          <pre><code># Create network configuration for eth2 (DMZ)
-sudo nano /etc/sysconfig/network-scripts/ifcfg-eth2</code></pre>
+          <pre><code># Create network configuration for ens256 (DMZ)
+sudo nano /etc/sysconfig/network-scripts/ifcfg-ens256</code></pre>
           <p>Add the following:</p>
           <pre><code>TYPE=Ethernet
 BOOTPROTO=static
-NAME=eth2
-DEVICE=eth2
+NAME=ens256
+DEVICE=ens256
 ONBOOT=yes
 IPADDR=10.100.0.1
 NETMASK=255.255.255.0
@@ -438,7 +438,10 @@ sudo dnf install -y iptables-services nftables</code></pre>
           <h4>Step 1.2: Configure Basic System Settings</h4>
           <pre><code># Enable IP forwarding (required for routing and NAT)
 sudo echo "net.ipv4.ip_forward = 1" > /etc/sysctl.d/99-ipforward.conf
-sudo sysctl -p /etc/sysctl.d/99-ipforward.conf</code></pre>
+sudo sysctl -p /etc/sysctl.d/99-ipforward.conf
+
+# Configure SELinux to allow IP forwarding
+sudo setsebool -P nis_enabled 1</code></pre>
         </div>
 
         <div class="exercise-card">
@@ -446,7 +449,8 @@ sudo sysctl -p /etc/sysctl.d/99-ipforward.conf</code></pre>
           <p>Create a new nftables configuration file:</p>
           <pre><code>sudo nano /etc/nftables/gateway-firewall.nft</code></pre>
           <p>
-            Add the following configuration (updated for 3 network interfaces):
+            Add the following configuration (updated for the correct network
+            interfaces):
           </p>
           <pre><code>#!/usr/sbin/nft -f
 
@@ -454,9 +458,9 @@ sudo sysctl -p /etc/sysctl.d/99-ipforward.conf</code></pre>
 flush ruleset
 
 # Define variables for interfaces
-define WAN_IF = eth0  # WAN interface (DHCP)
-define LAN_IF = eth1  # LAN interface (192.168.100.1/24)
-define DMZ_IF = eth2  # DMZ interface (10.100.0.1/24)
+define WAN_IF = ens192  # WAN interface (DHCP)
+define LAN_IF = ens224  # LAN interface (192.168.100.1/24)
+define DMZ_IF = ens256  # DMZ interface (10.100.0.1/24)
 
 table ip filter {
     # Base chain for incoming packets
@@ -688,7 +692,12 @@ sudo bash -c 'echo -e "</tls-auth>" >> client.ovpn'</code></pre>
 
         <div class="exercise-card">
           <h4>Step 2.6: Start and Enable OpenVPN Service</h4>
-          <pre><code>sudo systemctl start openvpn-server@server
+          <pre><code># Configure SELinux to allow OpenVPN
+sudo setsebool -P openvpn_can_network_connect 1
+sudo setsebool -P openvpn_enable_homedirs 1
+
+# Start and enable OpenVPN service
+sudo systemctl start openvpn-server@server
 sudo systemctl enable openvpn-server@server
 sudo systemctl status openvpn-server@server</code></pre>
         </div>
@@ -852,6 +861,21 @@ ip route show
 ping -c 4 8.8.8.8        # Test internet connectivity
 ping -c 4 192.168.100.10  # Test LAN connectivity
 ping -c 4 10.100.0.10     # Test DMZ connectivity</code></pre>
+        </div>
+
+        <div class="exercise-card">
+          <h4>SELinux Troubleshooting</h4>
+          <pre><code># Check SELinux status
+sestatus
+
+# View SELinux denials
+sudo ausearch -m avc -ts recent
+
+# Set SELinux to permissive mode temporarily (for troubleshooting)
+sudo setenforce 0
+
+# Set SELinux back to enforcing after troubleshooting
+sudo setenforce 1</code></pre>
         </div>
       </section>
     </main>

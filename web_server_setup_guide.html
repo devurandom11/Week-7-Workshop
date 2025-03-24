@@ -376,12 +376,12 @@ ip addr show</code></pre>
           
           <p>Configure static IP (if not already configured):</p>
           <pre><code># Create/edit network configuration 
-sudo nano /etc/sysconfig/network-scripts/ifcfg-eth0</code></pre>
+sudo nano /etc/sysconfig/network-scripts/ifcfg-ens192</code></pre>
           <p>Add the following:</p>
           <pre><code>TYPE=Ethernet
 BOOTPROTO=static
-NAME=eth0
-DEVICE=eth0
+NAME=ens192
+DEVICE=ens192
 ONBOOT=yes
 IPADDR=10.100.0.10
 NETMASK=255.255.255.0
@@ -458,6 +458,10 @@ sudo systemctl status httpd</code></pre>
 sudo firewall-cmd --permanent --add-service=http
 sudo firewall-cmd --permanent --add-service=https
 sudo firewall-cmd --reload</code></pre>
+          <p>Configure SELinux for the web server:</p>
+          <pre><code># Allow Apache to connect to networks
+sudo setsebool -P httpd_can_network_connect 1
+</code></pre>
         </div>
 
         <h3>Option B: Installing Nginx (LEMP)</h3>
@@ -477,6 +481,10 @@ sudo systemctl status nginx</code></pre>
 sudo firewall-cmd --permanent --add-service=http
 sudo firewall-cmd --permanent --add-service=https
 sudo firewall-cmd --reload</code></pre>
+          <p>Configure SELinux for the web server:</p>
+          <pre><code># Allow Nginx to connect to networks
+sudo setsebool -P httpd_can_network_connect 1
+</code></pre>
         </div>
 
         <div class="exercise-card">
@@ -630,6 +638,16 @@ sudo echo '<?php phpinfo(); ?>' > /var/www/html/info.php</code></pre>
           <pre><code>sudo nginx -t</code></pre>
           <p>If the test is successful, restart Nginx:</p>
           <pre><code>sudo systemctl restart nginx</code></pre>
+          
+          <p>Configure SELinux to allow the reverse proxy setup:</p>
+          <pre><code># Allow Apache and Nginx to communicate
+sudo setsebool -P httpd_can_network_connect 1
+
+# Allow Nginx to proxy connections
+sudo setsebool -P httpd_can_network_relay 1
+
+# In case of SELinux issues, check for denials
+sudo ausearch -m avc -ts recent</code></pre>
         </div>
 
         <div class="exercise-card">
@@ -933,6 +951,26 @@ sudo tail -f /var/log/httpd/modsec_audit.log
 # Temporarily disable ModSecurity for testing
 # Edit /etc/httpd/conf.d/mod_security.conf and change:
 # SecRuleEngine On → SecRuleEngine DetectionOnly</code></pre>
+        </div>
+        
+        <div class="exercise-card">
+          <h4>SELinux Troubleshooting</h4>
+          <pre><code># Check SELinux status
+sestatus
+
+# View SELinux denials related to web server
+sudo ausearch -m avc -ts recent | grep httpd
+sudo ausearch -m avc -ts recent | grep nginx
+
+# Temporarily set SELinux to permissive mode for troubleshooting
+sudo setenforce 0
+
+# After identifying issues, set back to enforcing
+sudo setenforce 1
+
+# Create custom policy module if needed (for persistent issues)
+sudo ausearch -m avc -ts recent | audit2allow -M mypolicy
+sudo semodule -i mypolicy.pp</code></pre>
         </div>
       </section>
     </main>
